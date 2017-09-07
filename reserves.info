@@ -1,0 +1,7 @@
+name = Reserves
+description = Mòdul per a la reserva de diferents recursos de què disposa un Ajundament o institució.
+package = Reserves
+version = 1.0.0
+core = 7.x
+
+dependencies[] = entity

@@ -1,0 +1,349 @@
+<?php
+
+/**
+* @file
+* Módul per a la reserva de recursos d'un Ajuntament o Institució. 
+* Desenvolupat per Lluis A. Oliver. 
+* www.lluisandreu.com
+*/
+
+/**
+ * Implements hook_entity_info().
+ */
+function reserves_entity_info() {
+
+	$info = array();
+
+	$info['reserves_espai'] = array(
+		'label' => t('Espai'),
+		'base table' => 'reserves_espai',
+		'entity keys' => array(
+			'id' => 'sid',
+			'label' => 'title',
+      'bundle' => 'reserves_espai',
+		),
+    'fieldable' => TRUE,
+    'bundles' => array(
+      'reserves_espai' => array(
+        'label' => t('reserves_espai'),
+        'admin' => array(
+          'path' => 'admin/reserves/espais/manage'
+        ),
+      ),
+    ),
+		'module' => 'reserves',
+		'entity class' => 'Entity',
+		'controller class' => 'ReservesEspaisEntityController',
+    'view modes' => array(
+      'full' => array(
+          'label' => t('Default'),
+          'custom settings' => FALSE,
+        ),
+    ),
+
+	);
+
+	return $info;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function reserves_permission() {
+  return array(
+    /*
+     *'administer my module' =>  array(
+     *  'title' => t('Administer my module'),
+     *  'description' => t('Perform administration tasks for my module.'),
+     *),
+     */
+    'view bookable spaces' =>  array(
+      'title' => t('Veure espais o recursos reservables'),
+      'description' => t('Veure els espais reservables.'),
+    ),
+    'add bookable spaces' => array(
+    	'title' => t('Editar els espais o recursos reservables'),
+    	'description' => t('Editar els espais o recursos reservables.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function reserves_menu() {
+
+  $items['admin/reserves/espais/manage'] = array(
+    'title' => 'Espais',
+    'page callback' => 'reserves_espai_list',
+    'access arguments' => array('view bookable spaces'),
+  );
+
+  $items['admin/reserves/espais/manage/add'] = array(
+    'title' => 'Afegeix un espai nou',
+    'page callback' => 'espais_add',
+    'access arguments' => array('add bookable spaces'),
+    'type' => MENU_LOCAL_ACTION,
+  );
+
+  $items['admin/reserves/espais/manage/list'] = array(
+    'title' => 'Espais',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['reserves/espais/%'] = array(
+    'title callback' => 'reserves_espai_title',
+    'title arguments' => array(2),
+    'page callback' => 'reserves_espai_view',
+    'page arguments' => array(2),
+    'acces arguments' => array('Veure espais o recursos reservables'),
+    'access callback' => TRUE,
+  );
+
+  $item['reserves/espais/%/view'] = array(
+    'title' => t('Veure'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
+  );
+
+  $items['admin/reserves/espais/add'] = array(
+  	'title ' => 'Afegeix un espai nou',
+  	'page callback' => 'espais_add',
+  	'acces arguments' => array('add bookable spaces'),
+  	'access callback' => TRUE,
+  );
+
+  $items['admin/reserves/espais/%/edit'] = array(
+  	'title' => 'Edita un espai o recurs',
+  	'page callback' => 'espais_edit',
+  	'page arguments' => array(3),
+  	'access arguments' => array('add bookable spaces'),
+  	'access callback' => TRUE,
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['admin/reserves/espais/%/delete'] = array(
+    'title' => 'Elimina aquest espai',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('espai_delete_confirm', 3),
+    'access arguments' => array('add bookable spaces'),
+    'access callback' => TRUE,
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+/**
+ * Callback for a page title when this entity is displayed.
+ */
+function reserves_espai_title($entity) {
+  $espais = entity_load('reserves_espai', array($entity));
+  $title = $espais[$entity]->title;
+  return $title;
+}
+
+function espais_info_page() {
+
+	$espais = entity_load('reserves_espai', array(1));
+
+	$list = entity_view('reserves_espai', $espais);
+  
+	  $output = array();
+	  foreach ($list['reserves_espai'] as $espai) {
+	    $output[] = drupal_render($espai);
+	  }
+	  
+	  return implode($output);
+}
+
+function reserves_espai_list() {
+
+  $markup = array();
+
+  $entities = entity_load("reserves_espai");
+
+  if (!empty($entities)) {
+    foreach ($entities as $key => $entity) {
+     //dpm($entity);
+     $rows[] = array(
+        'data' => array(
+            'id' => $entity->sid,
+            'title' => l($entity->title, 'reserves/espais/'.$entity->sid),
+            'uid' => $entity->uid,
+            'created' => format_date($entity->created, 'medium'),
+            'changed' => format_date($entity->changed, 'medium'),
+            'edit' => l('Edita', 'admin/reserves/espais/'.$entity->sid.'/edit'),
+          ),
+      );
+    }
+  }
+
+  $markup['entity_table'] = array(
+    '#theme' => 'table',
+    '#rows' => $rows,
+    '#sticky' => TRUE,
+    '#header' => array(
+      array('data' => t('ID'), 'field' => 'id', 'sort' => 'asc'),
+      array('data' => t('Nom de l\'espai'), 'field' => 'title'),
+      array('data' => t('UID'), 'field' => 'uid'),
+      array('data' => t('Data creació'), 'field' => 'created'),
+      array('data' => t('Data modificació'), 'field' => 'changed'),
+      array('data' => t('Accions')),
+    ),
+  );
+
+  return $markup;
+
+}
+
+function reserves_espai_view($entity) {
+
+  $espais = entity_load("reserves_espai", array($entity));
+
+  return 'Something';
+
+}
+
+function espais_add() {
+	$entity = entity_get_controller('reserves_espai')->create();
+	return drupal_get_form('reserves_espai_form', $entity);
+}
+
+function espais_edit($entity) {
+  $espais = entity_load('reserves_espai', array($entity));
+  return drupal_get_form('reserves_espai_form', $espais[$entity]);
+}
+
+
+
+/**
+ * Implements hook_form().
+ */
+function reserves_espai_form($form, &$form_state, $entity) {
+
+  dpm($entity);
+  
+  $form['fieldset'] = array(
+  	'#type' => 'fieldset',
+  	'#title' => t("Crea un nou espai o recurs"),
+  );
+
+  $form['fieldset']['espai_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t("Nom de l'espai o recurs reservable"),
+    '#required' => TRUE,
+    '#default_value' => isset($entity->title) ? $entity->title : "",
+  );
+
+  $form['espai_entity'] = array(
+    '#type' => 'value',
+    '#value' => isset($entity) ? $entity : "",
+  );
+
+  field_attach_form('reserves_espai', $entity, $form, $form_state);
+
+  $form['fieldset']['submit'] = array(
+  	'#type' => 'submit',
+  	'#value' => isset($entity->is_new) ? t('Crea') : t('Actualitza'),
+  	'#weight' => 100,
+  );
+
+  $form['fieldset']['delete'] = array(
+    '#type' => 'submit',
+    '#value' => t('Elimina'),
+    '#submit' => array('reserves_espai_delete'),
+    '#weight' => 200,
+  );
+
+  $form['new_entity'] = array(
+    '#type' => 'hidden',
+    '#value' => isset($entity->is_new) ? TRUE : FALSE,
+  );
+
+  return $form;
+}
+
+function reserves_espai_form_submit($form, &$form_state) {
+	
+	global $user;
+
+  $entity = $form_state['values']['espai_entity'];
+
+  if ($form_state['values']['new_entity']) {
+    $entity->uid = $user->uid;
+    $entity->language = 'ca';
+    $entity->status = 1;
+    $entity->created = time();
+  }
+	
+	$entity->title = $form_state['values']['espai_title'];
+	$entity->changed = time();
+
+  field_attach_submit('reserves_espai', $entity, $form, $form_state);
+	entity_save('reserves_espai', $entity);
+
+	$form_state['redirect'] = 'admin/reserves/espais/manage';
+	drupal_set_message(t("L'espai " . $entity->title . " ha estat creat"), 'status', TRUE);
+
+}
+
+function reserves_espai_delete($form, &$form_state) {
+
+  $entity = $form_state['values']['espai_entity'];
+  $form_state['redirect'] = 'admin/reserves/espais/' . $entity->sid . '/delete';
+
+}
+
+function espai_delete_confirm($form, &$form_state, $entity_id) {
+
+  $entity = espai_load($entity_id);
+
+  $form['espai_id'] = array(
+    '#type' => 'value',
+    '#value' => $entity->sid,
+  );
+  $question = t('Segur que vols eliminar aquest espai?');
+  $path = 'admin/reserves/espais/' . $entity->sid;
+  return confirm_form($form, $question, $path, t('Aquesta acció no es pot refer'), t("D'acord"), t('Cancela'));
+
+}
+
+function espai_delete_confirm_submit($form, &$form_state) {
+
+  $entity = espai_load($form_state['values']['espai_id']);
+  entity_delete("reserves_espai", $entity->sid);
+
+  drupal_set_message(t("L'espai " . $entity->title . " ha estat eliminat"), 'status', TRUE);
+  $form_state['redirect'] = 'admin/reserves/espais/manage';
+
+}
+
+
+/**
+ * Extending the EntityAPIController for the Espais entity.
+ */
+
+class ReservesEspaisEntityController extends EntityAPIController {
+
+	public function buildContent($entity, $view_mode = 'full', $langcode = NULL, $content = array()) {
+
+		$build = parent::buildContent($entity, $view_mode, $langcode, $content);
+
+		$build['title'] = array(
+			'#type' => 'markup',
+			'#markup' => check_plain($entity->title),
+			'#prefix' => '<h2>',
+			'#suffix' => '</h2>',
+		);
+
+		return $build;
+	}
+}
+
+/* Custom funcions */
+
+function espai_load($id) {
+  $espais = entity_load('reserves_espai', array($id));
+  return $espais[$id];
+}

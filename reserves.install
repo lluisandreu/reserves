@@ -1,0 +1,69 @@
+<?php
+
+/**
+* @file
+* Módul per a la reserva de recursos d'un Ajuntament o Institució. 
+* Desenvolupat per Lluis A. Oliver. 
+* www.lluisandreu.com
+*/
+
+/**
+ * Implements hook_schema().
+ */
+function reserves_schema() {
+	$schema = array();
+
+	$schema['reserves_espai'] = array(
+	'description' => 'The base table for the space',
+	'fields' => array(
+	  'sid' => array(
+	    'description' => 'Primary key for the space entity',
+	    'type' => 'serial',
+	    'unsigned' => TRUE,
+	    'not null' => TRUE,
+	   ),
+	   'uid' => array(
+	        'description' => 'The {users}.uid that owns this node; initially, this is the user that created it.',
+	        'type' => 'int',
+	        'not null' => TRUE,
+	        'default' => 0,
+	    ),
+	   'title' => array(
+	      'description' => 'The title of the space',
+	      'type' => 'varchar',
+	      'length' => 255,
+	      'not null' => TRUE,
+	      'default' => '', 
+	    ),
+	    'language' => array(
+	        'description' => 'The {languages}.language of this node.',
+	        'type' => 'varchar',
+	        'length' => 12,
+	        'not null' => TRUE,
+	        'default' => '',
+	    ),
+	    'status' => array(
+	        'description' => 'Boolean indicating whether the node is published (visible to non-administrators).',
+	        'type' => 'int',
+	        'not null' => TRUE,
+	        'default' => 1,
+	    ),
+	    'created' => array(
+	        'description' => 'The Unix timestamp of the entity creation time.',
+	        'type' => 'int',
+	        'not null' => TRUE,
+	        'default' => 0,
+	  	),
+	  	'changed' => array(
+	        'description' => 'The Unix timestamp when the node was most recently saved.',
+	        'type' => 'int',
+	        'not null' => TRUE,
+	        'default' => 0,
+	    ),
+	  ),
+	'primary key' => array('sid'),
+	);
+	return $schema;
+}
+
+
