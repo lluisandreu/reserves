@@ -1,7 +1,12 @@
-name = Reserves
+name = Espais
 description = Mòdul per a la reserva de diferents recursos de què disposa un Ajundament o institució.
 package = Reserves
 version = 1.0.0
 core = 7.x
 
 dependencies[] = entity
+dependencies[] = date
+dependencies[] = office_hours
+dependencies[] = reserves_bookings
+
+files[] = reserves.controller.inc

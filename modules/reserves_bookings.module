@@ -1,0 +1,109 @@
+<?php
+
+define("BOOKING", 'reserves_booking');
+
+/**
+ * Implements hook_entity_info().
+ */
+function reserves_bookings_entity_info() {
+
+	$info = array();
+ 
+    $into[BOOKING] = array(
+	'label' => t('Reserves'),
+	//'controller class' => '',
+	'base table' => BOOKING,
+	//'uri callback' => '',
+	//'fieldable' => ,
+	'entity keys' => array(
+		'id' => 'bid',
+	),
+	'bundles' => array(
+		BOOKING => array(
+			'label' => t(BOOKING),
+			'admin' => array(
+			 	'path' => 'admin/structure/reserves/manage'
+			),
+		),
+	),
+	'module' => 'reserves_bookings',
+	'entity class' => 'Entity',
+	'view modes' => array(
+		'full' => array(
+		'label' => t('Default'),
+		'custom settings' => FALSE,
+		),
+	),
+  );
+
+  return $info;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function reserves_bookings_permission() {
+  return array(
+    /*
+     *'administer my module' =>  array(
+     *  'title' => t('Administer my module'),
+     *  'description' => t('Perform administration tasks for my module.'),
+     *),
+     */
+    'view bookings' =>  array(
+      'title' => t('Veure totes les reserves'),
+      'description' => t('Es poden veure totes les reserves'),
+    ),
+    'create bookings' =>  array(
+      'title' => t('Crear una reserva'),
+      'description' => t('Es poden crear reserves'),
+    ),
+    'manage bookings' =>  array(
+      'title' => t('Administrar reserves'),
+      'description' => t('Es poden administrar totes les reserves'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function reserves_bookings_menu() {
+
+  $items['admin/structure/reserves/manage'] = array(
+    'title' => 'Reserves',
+    'page callback' => 'reserves_list',
+    'access arguments' => array('view bookings'),
+  );
+
+  $items['admin/structure/reserves/manage/add'] = array(
+    'title' => 'Crea una reserva',
+    'page callback' => 'reserves_add',
+    'access arguments' => array('create bookings'),
+    'type' => MENU_LOCAL_ACTION,
+  );
+
+  return $items;
+}
+
+function reserves_list() {
+	return "test";
+}
+
+function reserves_add() {
+	return "add";
+}
+
+/**
+ * Implements hook_form().
+ */
+function reserves_bookings_form($form, &$form_state, $entity) {
+  
+  $form[''] = array(
+    '#type' => '',
+    '#title' => t(''),
+    '#default_value' => $node->,
+  );
+
+  return $form;
+}
