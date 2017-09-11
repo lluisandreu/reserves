@@ -99,12 +99,11 @@ function reserves_menu() {
     'page arguments' => array(1),
     'acces arguments' => array('Veure espais o recursos reservables'),
     'access callback' => TRUE,
-    'type' => MENU_CALLBACK,
   );
 
   $item['espai/%reserves_espai/view'] = array(
     'title' => t('Veure'),
-    'type' => MENU_LOCAL_TASK,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
   );
 
@@ -136,23 +135,10 @@ function reserves_espai_title($entity) {
   return $entity->title;
 }
 
-function espais_info_page() {
-
-	$espais = entity_load('reserves_espai', array(1));
-
-	$list = entity_view('reserves_espai', $espais);
-  
-	  $output = array();
-	  foreach ($list['reserves_espai'] as $espai) {
-	    $output[] = drupal_render($espai);
-	  }
-	  
-	  return implode($output);
-}
-
 function reserves_espai_list() {
 
   $markup = array();
+  $rows = array();
 
   $entities = entity_load("reserves_espai");
 
@@ -184,6 +170,7 @@ function reserves_espai_list() {
       array('data' => t('Data modificació'), 'field' => 'changed'),
       array('data' => t('Accions')),
     ),
+    '#empty' =>t('No has creat cap espai encara'),
   );
 
   return $markup;
@@ -263,9 +250,10 @@ function reserves_espai_form($form, &$form_state, $entity) {
 
   $form['espai_title'] = array(
     '#type' => 'textfield',
-    '#title' => t("Nom de l'espai o recurs reservable"),
+    '#title' => t("Nom de l'espai"),
     '#required' => TRUE,
     '#default_value' => $entity->title,
+    '#weight' => -100,
   );
 
   $form['espai_entity'] = array(
@@ -303,7 +291,7 @@ function reserves_espai_form_submit($form, &$form_state) {
 
   $entity = $form_state['espai'];
 
-  if ($entity->is_new) {
+  if (isset($entity->is_new) && $entity->is_new != FALSE) {
     $entity->uid = $user->uid;
     $entity->language = $language->language;
     $entity->status = 1;
@@ -382,3 +370,50 @@ function espais_load_multiple($ids = array(), $conditions = array(), $reset = FA
   return entity_load('reserves_espai', $ids, $conditions, $reset);
 }
 
+function get_espai_name_by_id($id) {
+  $query = db_select('reserves_espai', 're')
+            ->fields('re', array('title'))
+            ->condition('sid', $id, '=')
+            ->execute()
+            ->fetch();
+  if (!empty($query)) {
+    return $query->title;
+  } else {
+    return FALSE;
+  }
+}
+
+function reserves_validate_slots($requested, $total) {
+  if ($requested > $total) {
+    return FALSE;
+  } else {
+    return TRUE;
+  }
+}
+
+function reserves_validate_dates(&$espai, &$date_start, &$date_end, &$errors) {
+
+  $errors = '';
+  $espai_dates = $espai->reserves_espai_times['und'];
+  $espai_granularity = intval($espai->reserves_espai_granularity['und'][0]['value']) * 60;
+
+  if ($date_end <= $date_start) {
+    $errors = "La data final ha de ser més gran que la data d'inici";
+    return FALSE;
+  } else {
+    if (date('d/m/Y', $date_start) != date('d/m/Y', $date_end)) {
+      $errors = "El dia ha de ser el mateix per ambdues dates";
+      return FALSE;
+    } elseif ($date_end - $date_start < $espai_granularity) {
+      $errors = "La reserva ha de ser de " . ($espai_granularity/60) . ' minuts';
+      return FALSE;
+    } else {
+      return TRUE;
+    }
+  }
+}
+
+function get_duration_from_date($date_start, $date_end) {
+  $duration = strtotime($date_end) - strtotime($date_start);
+  return $duration;
+}

@@ -1,4 +1,88 @@
-<?php 
+<?php
+
+/**
+ * Implements hook_install().
+ */
+function reserves_bookings_install() {
+
+	if (!field_info_field(BOOKING.'_bookingtime')) {
+		$field = array(
+		    'cardinality' => 1,
+		    'entity_types' => BOOKING,
+		    'field_name' => BOOKING.'_bookingtime',
+		    'locked' => 1,
+		    'module' => 'date',
+		    'settings' => array(
+		      'cache_count' => 4,
+		      'cache_enabled' => 0,
+		      'granularity' => array(
+		        'day' => 'day',
+		        'hour' => 'hour',
+		        'minute' => 'minute',
+		        'month' => 'month',
+		        'second' => 0,
+		        'year' => 'year',
+		      ),
+		      'repeat' => 0,
+		      'timezone_db' => 'UTC',
+		      'todate' => 'required',
+		      'tz_handling' => 'site',
+		    ),
+		    'type' => 'datetime',
+		);
+		field_create_field($field);
+	}
+	if (!field_info_instance(BOOKING, BOOKING.'_bookingtime', BOOKING)) {
+		$instance = array(
+			'bundle' => BOOKING,
+		    'display' => array(
+		      'default' => array(
+		        'label' => 'above',
+		        'module' => 'date',
+		        'settings' => array(
+		          'format_type' => 'long',
+		          'fromto' => 'both',
+		          'multiple_from' => '',
+		          'multiple_number' => '',
+		          'multiple_to' => '',
+		          'show_remaining_days' => FALSE,
+		          'show_repeat_rule' => 'show',
+		        ),
+		        'type' => 'date_default',
+		        'weight' => 4,
+		      ),
+		    ),
+		    'entity_type' => BOOKING,
+		    'field_name' => BOOKING.'_bookingtime',
+		    'label' => 'Dia',
+		    'required' => 0,
+		    'settings' => array(
+		      'default_value' => 'now',
+		      'default_value2' => 'same',
+		      'default_value_code' => '',
+		      'default_value_code2' => '',
+		      'user_register_form' => FALSE,
+		    ),
+		    'widget' => array(
+		      'active' => 1,
+		      'module' => 'date',
+		      'settings' => array(
+		        'increment' => 15,
+		        'input_format' => 'd/m/Y - H:i:s',
+		        'input_format_custom' => '',
+		        'label_position' => 'above',
+		        'no_fieldset' => 0,
+		        'repeat_collapsed' => 0,
+		        'text_parts' => array(),
+		        'year_range' => '0:+1',
+		      ),
+		      'type' => 'date_popup',
+		      'weight' => 45,
+		    ),
+		);
+		field_create_instance($instance);
+	}
+}
 
 /**
  * Implements hook_schema().
@@ -68,6 +152,14 @@ function reserves_bookings_schema() {
  * Implements hook_uninstall().
  */
 function reserves_bookings_uninstall() {
+
+	$fields_toremove = array('_bookingtime');
+	foreach ($fields_toremove as $key => $field) {
+		$instance = field_info_instance(BOOKING, BOOKING.$field, BOOKING);
+		if ($instance) {
+			field_delete_instance($instance, TRUE);
+		}
+	}
 
   field_attach_delete_bundle(BOOKING, BOOKING);
 }

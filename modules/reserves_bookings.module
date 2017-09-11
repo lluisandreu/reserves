@@ -9,31 +9,32 @@ function reserves_bookings_entity_info() {
 
 	$info = array();
  
-    $into[BOOKING] = array(
-	'label' => t('Reserves'),
-	//'controller class' => '',
-	'base table' => BOOKING,
-	//'uri callback' => '',
-	//'fieldable' => ,
-	'entity keys' => array(
-		'id' => 'bid',
-	),
-	'bundles' => array(
-		BOOKING => array(
-			'label' => t(BOOKING),
-			'admin' => array(
-			 	'path' => 'admin/structure/reserves/manage'
-			),
-		),
-	),
-	'module' => 'reserves_bookings',
-	'entity class' => 'Entity',
-	'view modes' => array(
-		'full' => array(
-		'label' => t('Default'),
-		'custom settings' => FALSE,
-		),
-	),
+  $info[BOOKING] = array(
+  	'label' => t('Reserves'),
+    'entity class' => 'Entity',
+  	'controller class' => 'ReservesBookingsController',
+    'views controller class' => 'EntityDefaultViewsController',
+  	'base table' => BOOKING,
+  	//'uri callback' => '',
+  	'fieldable' => TRUE,
+  	'entity keys' => array(
+  		'id' => 'bid',
+  	),
+  	'bundles' => array(
+  		BOOKING => array(
+  			'label' => t(BOOKING),
+  			'admin' => array(
+  			 	'path' => 'admin/structure/reserves/manage'
+  			),
+  		),
+  	),
+  	'module' => 'reserves_bookings',
+  	'view modes' => array(
+  		'full' => array(
+  		'label' => t('Default'),
+  		'custom settings' => FALSE,
+  		),
+  	),
   );
 
   return $info;
@@ -83,27 +84,334 @@ function reserves_bookings_menu() {
     'type' => MENU_LOCAL_ACTION,
   );
 
+  $items['admin/structure/reserves/manage/list'] = array(
+    'title' => 'Reserves',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['reserva/%reserves_booking'] = array(
+    'title callback' => 'reserves_booking_title',
+    'title arguments' => array(1),
+    'page callback' => 'reserves_booking_view',
+    'page arguments' => array(1),
+    'acces arguments' => array('manage bookings'),
+    'access callback' => TRUE,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $item['reserva/%reserves_booking/view'] = array(
+    'title' => t('Veure'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => -10,
+  );
+
+  $items['admin/structure/reserves/%reserves_booking/edit'] = array(
+    'title' => 'Edita una reserva',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('reserves_bookings_form', 3),
+    'access arguments' => array('manage bookings'),
+    'access callback' => TRUE,
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['admin/structure/reserves/%reserves_booking/delete'] = array(
+    'title' => 'Elimina aquesta reserva',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('reserves_bookings_delete_confirm', 3),
+    'access arguments' => array('manage bookings'),
+    'access callback' => TRUE,
+    'type' => MENU_LOCAL_TASK,
+  );
+
   return $items;
 }
 
 function reserves_list() {
-	return "test";
+	
+  $markup = array();
+  $rows = array();
+
+  $bookings = entity_load(BOOKING);
+
+  if (!empty($bookings)) {
+    foreach ($bookings as $key => $entity) {
+      dpm($entity);
+      if($entity->sid && get_espai_name_by_id($entity->sid) != FALSE) {
+        $espai_title = get_espai_name_by_id($entity->sid);
+      } else {
+        $espai_title = 'Desconegut';
+      }
+      $duration = get_duration_from_date($entity->reserves_booking_bookingtime['und'][0]['value'], $entity->reserves_booking_bookingtime['und'][0]['value2']);
+     $rows[] = array(
+        'data' => array(
+            'id' => l($entity->bid, 'reserva/' . $entity->bid),
+            'sid' => l($espai_title, 'espai/' . $entity->sid),
+            'uid' => $entity->uid,
+            'pax' => $entity->pax,
+            'duration' => $duration/60 . ' minuts',
+            'status' => booking_format_status($entity->status),
+            'created' => format_date($entity->created, 'short'),
+            'changed' => format_date($entity->changed, 'short'),
+            'edit' => l('Edita', 'admin/structure/reserves/'.$entity->bid.'/edit'),
+          ),
+      );
+    }
+  }
+
+  $markup['entity_table'] = array(
+      '#theme' => 'table',
+      '#rows' => $rows,
+      '#sticky' => TRUE,
+      '#header' => array(
+        array('data' => t('ID'), 'field' => 'id', 'sort' => 'asc'),
+        array('data' => t('Nom de l\'espai'), 'field' => 'sid'),
+        array('data' => t('UID'), 'field' => 'uid'),
+        array('data' => t('Places'), 'field' => 'pax'),
+        array('data' => t('Temps reservat'), 'field' => 'pax'),
+        array('data' => t('Estat'), 'field' => 'status'),
+        array('data' => t('Data creació'), 'field' => 'created'),
+        array('data' => t('Data modificació'), 'field' => 'changed'),
+        array('data' => t('Accions')),
+      ),
+      '#empty' =>t('No hi ha cap reserva encara'),
+    );
+
+  return $markup;
+}
+
+function reserves_booking_title($entity) {
+  $title = 'Reserva #' . $entity->bid;
+  return $title;
+}
+
+function reserves_booking_view($entity, $view_mode = "full") {
+
+  $entity_type = BOOKING;
+  $entity_id = $entity->bid;
+
+  //
+  // Remove previously built content, if exists
+  //
+  $entity->content = array();
+
+  //
+  // Build the fields content
+  //
+  field_attach_prepare_view($entity_type, array($entity_id => $entity), $view_mode);
+  entity_prepare_view($entity_type, array($entity_id => $entity));
+  
+  $entity->content += field_attach_view($entity_type, $entity, $view_mode);
+ 
+   // Specify the theme to use and set the #element. Note that the key 
+   // you use to pass the entity object must match the key you set in the 
+   // variables in my_module_theme(). So in the case below, we use the key 
+   // named #element because in my_module_theme() we set the following code:
+   //
+   // array(
+   //   'my_entity' => array(
+   //     'variables' => array('element' => null),
+   //     'template' => 'my_entity'
+   //   ),
+   // );
+   //
+  $entity->content += array(
+    '#theme'     => $entity_type,
+    '#element'   => $entity,
+    '#view_mode' => $view_mode,
+    '#language'  => LANGUAGE_NONE,
+  );
+  
+  return $entity->content;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function reserves_bookings_theme($existing, $type, $theme, $path) {
+  return array(
+    BOOKING => array(
+      'render element' => 'booking',
+      'template' => 'templates/reserves-booking',
+      'variables' => array('element' => NULL),
+    ),
+  );
 }
 
 function reserves_add() {
-	return "add";
+	$booking = entity_get_controller(BOOKING)->create();
+  return drupal_get_form("reserves_bookings_form", $booking);
+}
+
+function reserves_bookings_delete($form, &$form_state) {
+
+  $entity = $form_state['booking'];
+  $form_state['redirect'] = 'admin/structure/reserves/' . $entity->bid . '/delete';
+
 }
 
 /**
  * Implements hook_form().
  */
 function reserves_bookings_form($form, &$form_state, $entity) {
+
+  $form_state['booking'] = $entity;
+
+  $form['sid'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Espai on fer la reserva',
+    '#attributes' => array(
+        ' type' => 'number', // insert space before attribute name :)
+    ),
+    '#default_value' => isset($entity->sid) ? $entity->sid : '',
+    '#required' => TRUE,
+  );
   
-  $form[''] = array(
-    '#type' => '',
-    '#title' => t(''),
-    '#default_value' => $node->,
+  $form['pax'] = array(
+    '#type' => 'select',
+    '#title' => t('Nombre de places'),
+    '#options' => array(1 => '1', 2 => '2'),
+    '#default_value' => isset($entity->pax) ? $entity->pax : '',
+    '#required' => TRUE,
+  );
+
+  field_attach_form(BOOKING, $entity, $form, $form_state);
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => isset($entity) ? t('Crea') : t('Actualitza'),
+    '#weight' => 100,
+  );
+
+  $form['delete'] = array(
+    '#type' => 'submit',
+    '#value' => t('Elimina'),
+    '#submit' => array('reserves_bookings_delete'),
+    '#weight' => 200,
+  );
+
+  $form['#validate'][] = 'reserves_bookings_form_validate';
+
+  $form['new_entity'] = array(
+    '#type' => 'hidden',
+    '#value' => isset($entity->is_new) ? TRUE : FALSE,
   );
 
   return $form;
+}
+
+/**
+ * Implements hook_validate().
+ */
+function reserves_bookings_form_validate($form, &$form_state) {
+  
+  $sid = $form_state['values']['sid'];
+  $booking = $form_state['booking'];
+  $date_start = strtotime($form_state['values']['reserves_booking_bookingtime']['und'][0]['value']);
+  $date_end = strtotime($form_state['values']['reserves_booking_bookingtime']['und'][0]['value2']);
+
+  dpm($form_state);
+
+  if ($sid != '') {
+    $espai = espai_load($sid);
+    $requested = $form_state['values']['pax'];
+    $total = $espai->reserves_espai_slots['und'][0]['value'];
+    if (reserves_validate_slots($requested, $total)) {
+        if (reserves_validate_dates($espai, $date_start, $date_end, $errors)) {
+          drupal_set_message(t("valida"), 'status', FALSE);
+        } else {
+          form_set_error("No hi ha espai", $errors);
+        }
+    } else {
+      form_set_error("No hi ha espai", "No queden " . $requested . " places en aquest espai");
+    }
+    
+  }
+  $booking = $form_state['booking'];
+
+}
+
+function reserves_bookings_form_submit(&$form, &$form_state) {
+
+  global $user;
+  global $language;
+
+  $entity = $form_state['booking'];
+
+  if (isset($entity->is_new) && $entity->is_new) {
+    $entity->uid = $user->uid;
+    $entity->language = $language->language;
+    $entity->status = 1;
+    $entity->created = time();
+  }
+  $entity->sid = $form_state['values']['sid'];
+  $entity->pax = $form_state['values']['pax'];
+  $entity->changed = time();
+
+  field_attach_submit(BOOKING, $entity, $form, $form_state);
+
+  entity_save(BOOKING, $entity);
+
+  $form_state['redirect'] = 'admin/structure/reserves/manage';
+
+  if (isset($entity->is_new) && $entity->is_new) {
+    drupal_set_message(t("La reserva #" . $entity->bid . " ha estat creada"), 'status', TRUE);
+  } else {
+    drupal_set_message(t("La reserva #" . $entity->bid . " ha estat guardada"), 'status', TRUE);
+  }
+   
+}
+
+function reserves_bookings_delete_confirm($form, &$form_state, $entity) {
+
+  $form['booking_id'] = array(
+    '#type' => 'value',
+    '#value' => $entity->bid,
+  );
+  $question = t('Segur que vols eliminar aquesta reserva?');
+  $path = 'admin/structure/reserves/' . $entity->bid;
+  return confirm_form($form, $question, $path, t('Aquesta acció no es pot refer'), t("D'acord"), t('Cancela'));
+
+}
+
+function reserves_bookings_delete_confirm_submit($form, &$form_state) {
+
+  $entity = espai_load($form_state['values']['booking_id']);
+  entity_delete(BOOKING, $entity->sid);
+
+  drupal_set_message(t("La reserva #" . $entity->bid . " ha estat eliminada"), 'status', TRUE);
+  $form_state['redirect'] = 'admin/structure/reserves/manage';
+
+}
+
+/* Custom funcions */
+
+/**
+ * We save the entity by calling the controller.
+ */
+function booking_save(&$entity) {
+  return entity_get_controller(BOOKING)->save($entity);
+}
+
+function reserves_booking_load($id = NULL, $reset = FALSE){
+  $ids = (isset ($id) ? array($id) : array());
+  $bookings = booking_load_multiple($ids, $reset);
+  return $bookings ? reset ($bookings) : FALSE;
+}
+ 
+function booking_load_multiple($ids = array(), $conditions = array(), $reset = FALSE){
+  return entity_load(BOOKING, $ids, $conditions, $reset);
+}
+
+function booking_format_status($status) {
+  switch ($status) {
+    case 1:
+      return "Aceptada";
+      break;
+    case 2:
+      return "Per aceptar";
+      break;
+    default:
+      return "Cancelada";
+      break;
+  }
 }

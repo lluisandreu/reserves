@@ -3,3 +3,5 @@ description = Submòdul d'Espais per fer reserves d'espais o entitats
 core = 7.x
 version = 1.0
 package = Reserves
+
+files[] = reserves_bookings.controller.inc

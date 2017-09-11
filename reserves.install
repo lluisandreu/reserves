@@ -29,7 +29,7 @@ function reserves_install() {
 			'entity_type' => ESPAI,
 			'bundle' => ESPAI,
 			'label' => 'Descripció',
-			'required' => FASE,
+			'required' => TRUE,
 			'widget' => array(
 				'type' => 'text_with_summary',
 			),
@@ -471,6 +471,7 @@ function reserves_uninstall() {
 		$modules = array('reserves_bookings');
 		module_disable($modules);
 		drupal_uninstall_modules($modules);
+		drush_print($modules . ' Has been uninstalled');
 	}
 
 	field_attach_delete_bundle('reserves_espai', 'reserves_espai');
