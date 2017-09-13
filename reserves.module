@@ -10,6 +10,16 @@
 /**
  * Implements hook_entity_info().
  */
+
+/**
+ * Implements hook_init().
+ */
+function reserves_init() {
+  /*
+   *drupal_add_css(drupal_get_path('module', 'book') . '/book.css');
+   */
+}
+
 function reserves_entity_info() {
 
 	$info = array();
@@ -174,7 +184,41 @@ function reserves_espai_list() {
   );
 
   return $markup;
+}
 
+function reserves_preprocess_reserves_espai(&$variables) {
+
+  // Load library
+  $libraries = array('moment', 'fullcalendar');
+
+  foreach ($libraries as $lib) {
+    if (($library = libraries_detect($lib)) && !empty($library['installed'])) {
+      $variables[$lib . '_exists'] = TRUE;
+      libraries_load($lib);
+    } else {
+      $error = $library['error'];
+      // This contains a detailed (localized) error message.
+      $variables[$lib . '_exists'] = FALSE;
+      $error_message = $library['error message'];
+      drupal_set_message($error_message, 'warning', TRUE);
+    }
+  }
+
+  $options = array(
+    'weight' => 1000, // High number to push this file to the bottom of the list
+    'scope' => 'footer' // This will output the JS file in the footer scope, so at the end of   the document
+  );
+
+  $add_event_form = drupal_get_form('reserves_ajax_booking_form', $variables['element']);
+  $variables['add_event_form'] = drupal_render($add_event_form);
+
+  $times = $variables['element']->reserves_espai_times['und'];
+
+  drupal_add_css(drupal_get_path('module', 'reserves') . '/reserves.css');
+
+  drupal_add_js(array('reserves' => array('times' => $times)), 'setting');
+  drupal_add_js(array('reserves' => array('sid' => $variables['element']->sid)), 'setting');
+  drupal_add_js(drupal_get_path('module', 'reserves') . '/reserves.scripts.js', $options);
 }
 
 function reserves_espai_view($entity, $view_mode = "full") {
@@ -338,6 +382,40 @@ function espai_delete_confirm_submit($form, &$form_state) {
 
 }
 
+/**
+ * Implementation of hook_libraries_info().
+ */
+function reserves_libraries_info() {
+  $libraries = array();
+  $libraries['fullcalendar'] = array(
+    'name' => 'fullcalendar',
+    'vendor url' => 'https://fullcalendar.io',
+    'download url' => 'https://github.com/arshaw/fullcalendar/releases/download/v3.5.1/fullcalendar-3.5.1.zip',
+    'version callback' => 'short_circuit_version',
+    'files' => array(
+      'js' => array('fullcalendar.min.js'),
+      'css' => array('fullcalendar.min.css'),
+    ),
+  );
+  $libraries['moment'] = array(
+    'name' => 'moment',
+    'vendor url' => 'https://github.com/moment/moment/',
+    'download url' => 'https://github.com/moment/moment/',
+    'version callback' => 'short_circuit_version',
+    'files' => array(
+      'js' => array('moment.js'),
+    ),
+  );
+  return $libraries;
+}
+
+/**
+* Short-circuit the version argument.
+*/
+function short_circuit_version() { 
+  return TRUE;
+}
+
 
 /* Custom funcions */
 
@@ -383,6 +461,15 @@ function get_espai_name_by_id($id) {
   }
 }
 
+function _generate_num_slots_available($entity) {
+  $slots = $entity->reserves_espai_slots['und'][0]['value'];
+  $options = array();
+  for ($i=1; $i < $slots + 1; $i++) { 
+    $options[$i] = $i;
+  }
+  return $options;
+}
+
 function reserves_validate_slots($requested, $total) {
   if ($requested > $total) {
     return FALSE;
@@ -413,7 +500,22 @@ function reserves_validate_dates(&$espai, &$date_start, &$date_end, &$errors) {
   }
 }
 
+function reserves_validate_booking_dates($date_start, $date_end, $espai_id) {
+
+  $query = db_select('field_data_reserves_booking_bookingtime', 'fb');
+  $query->join('reserves_booking', 'rb', 'fb.entity_id = rb.bid');
+  $query->fields('fb', array('reserves_booking_bookingtime_value', 'reserves_booking_bookingtime_value2'));
+  $query->condition('rb.sid', $espai_id, "=");
+  $result = $query->execute();
+
+  foreach ($result as $key => $record) {
+    dpm($record);
+  }
+}
+
 function get_duration_from_date($date_start, $date_end) {
   $duration = strtotime($date_end) - strtotime($date_start);
   return $duration;
 }
+
+

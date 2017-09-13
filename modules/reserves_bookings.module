@@ -76,13 +76,13 @@ function reserves_bookings_menu() {
     'page callback' => 'reserves_list',
     'access arguments' => array('view bookings'),
   );
-
+  /*
   $items['admin/structure/reserves/manage/add'] = array(
     'title' => 'Crea una reserva',
     'page callback' => 'reserves_add',
     'access arguments' => array('create bookings'),
     'type' => MENU_LOCAL_ACTION,
-  );
+  );*/
 
   $items['admin/structure/reserves/manage/list'] = array(
     'title' => 'Reserves',
@@ -381,6 +381,98 @@ function reserves_bookings_delete_confirm_submit($form, &$form_state) {
   drupal_set_message(t("La reserva #" . $entity->bid . " ha estat eliminada"), 'status', TRUE);
   $form_state['redirect'] = 'admin/structure/reserves/manage';
 
+}
+
+function reserves_ajax_booking_form($form, &$form_state, $entity) {
+  
+  $form['#method'] = 'post';
+  //$form['booking'] = $entity;
+
+  $form['sid'] = array(
+    '#type' => 'hidden',
+    '#value' => $entity->sid,
+  );
+
+  $form['uid'] = array(
+    '#type' => 'hidden',
+    '#value' => $entity->uid,
+  );
+
+  $form['booking_day'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Data',
+    '#default_value' => '',
+    '#disabled' => TRUE,
+  );
+
+  $form['date_start'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Hora inicial',
+    '#default_value' => '',
+    '#disabled' => TRUE,
+  );
+
+  $form['date_end'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Hora final',
+    '#default_value' => '',
+    '#disabled' => TRUE,
+  );
+
+  $form['pax'] = array(
+    '#type' => 'select',
+    '#title' => t('Nombre de places'),
+    '#options' => _generate_num_slots_available($entity),
+    '#default_value' => 1,
+    '#required' => TRUE,
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+      '#value' => t('Guarda'),
+      '#ajax' => array(
+        'callback' => 'reserves_ajax_booking_form_submit',
+        'wrapper' => 'reserves_ajax_booking_form-form',
+        'method' => 'replace',
+        'effect' => 'fade',
+        'progress' => array('type' => 'throbber', 'message' => ''),
+      ),
+  );
+
+  return $form;
+}
+
+function reserves_ajax_booking_form_validate($form, $form_state) {
+
+  drupal_set_message('test', 'status', FALSE);
+ 
+  $commands = array();
+  $commands[] = ajax_command_replace('#ajax-status-messages-wrapper', theme('status_messages'));
+  return array(
+    '#type' => 'ajax',
+    '#commands' => $commands,
+  );
+
+  /*
+  if ($sid != '') {
+    $espai = espai_load($sid);
+    $requested = $form_state['values']['pax'];
+    $total = $espai->reserves_espai_slots['und'][0]['value'];
+    if (reserves_validate_slots($requested, $total)) {
+        if (reserves_validate_dates($espai, $date_start, $date_end, $errors)) {
+          drupal_set_message(t("valida"), 'status', FALSE);
+        } else {
+          form_set_error("No hi ha espai", $errors);
+        }
+    } else {
+      form_set_error("No hi ha espai", "No queden " . $requested . " places en aquest espai");
+    }
+  }*/
+}
+
+function reserves_ajax_booking_form_submit($form, $form_state) {
+
+  
 }
 
 /* Custom funcions */

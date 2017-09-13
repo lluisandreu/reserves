@@ -8,5 +8,6 @@ dependencies[] = entity
 dependencies[] = date
 dependencies[] = office_hours
 dependencies[] = reserves_bookings
+dependencies[] = libraries
 
 files[] = reserves.controller.inc
