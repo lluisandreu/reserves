@@ -1,3 +1,16 @@
 .fc-nonbusiness {
     background: red;
 }
+
+.fc-event.slots-available {
+    background: green;
+}
+
+.fc-event.full {
+    background: red;
+    cursor: not-allowed;
+}
+
+.fc-highlight {
+    background: yellow;
+}

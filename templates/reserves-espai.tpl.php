@@ -1,5 +1,4 @@
 <?php $content = $element->content; ?>
-<?php dpm($element); ?>
 
 <?php print render($content['reserves_espai_body']); ?>
 
@@ -14,7 +13,6 @@
 
 <div id="add-booking-popup" class="add-booking-popup" style="display: none;">
 	<h2>Confirma la teva reserva</h2>
-	<div id="ajax-status-messages-wrapper"></div>
 	<?php print $add_event_form; ?>
 
 </div>

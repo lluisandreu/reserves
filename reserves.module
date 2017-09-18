@@ -135,6 +135,20 @@ function reserves_menu() {
     'type' => MENU_LOCAL_TASK,
   );
 
+  $items['espais/%reserves_espai/json'] = array(
+    'title' => '',
+    'page callback' => 'reserves_bookings_json_byspace',
+    'access arguments' => array('add bookable spaces'),
+    'page arguments' => array(1),
+  );
+
+  $items['espais/festes/%reserves_espai/json'] = array(
+    'title' => '',
+    'page callback' => 'reserves_bookings_holidays_json_byspace',
+    'access arguments' => array('add bookable spaces'),
+    'page arguments' => array(2),
+  );
+
   return $items;
 }
 
@@ -209,7 +223,7 @@ function reserves_preprocess_reserves_espai(&$variables) {
     'scope' => 'footer' // This will output the JS file in the footer scope, so at the end of   the document
   );
 
-  $add_event_form = drupal_get_form('reserves_ajax_booking_form', $variables['element']);
+  $add_event_form = drupal_get_form('reserves_bookings_create_booking', $variables['element']);
   $variables['add_event_form'] = drupal_render($add_event_form);
 
   $times = $variables['element']->reserves_espai_times['und'];
@@ -462,15 +476,16 @@ function get_espai_name_by_id($id) {
 }
 
 function _generate_num_slots_available($entity) {
-  $slots = $entity->reserves_espai_slots['und'][0]['value'];
+  $max_slots = $entity->reserves_espai_slots['und'][0]['value'];
+
   $options = array();
-  for ($i=1; $i < $slots + 1; $i++) { 
+  for ($i=1; $i < $max_slots + 1; $i++) { 
     $options[$i] = $i;
   }
   return $options;
 }
 
-function reserves_validate_slots($requested, $total) {
+function _reserves_validate_slots($requested, $total) {
   if ($requested > $total) {
     return FALSE;
   } else {
@@ -478,7 +493,7 @@ function reserves_validate_slots($requested, $total) {
   }
 }
 
-function reserves_validate_dates(&$espai, &$date_start, &$date_end, &$errors) {
+function _reserves_validate_dates(&$espai, &$date_start, &$date_end, &$errors) {
 
   $errors = '';
   $espai_dates = $espai->reserves_espai_times['und'];
@@ -509,8 +524,45 @@ function reserves_validate_booking_dates($date_start, $date_end, $espai_id) {
   $result = $query->execute();
 
   foreach ($result as $key => $record) {
-    dpm($record);
+    //dpm($record);
   }
+}
+
+function _get_bookings_all($status = 1) {
+
+  $query = db_select('reserves_booking', 'rb');
+  $query->fields('rb');
+  $query->condition('rb.status', $status);
+  $results = $query->execute()->fetchAll();
+
+  return $results;
+}
+
+function _get_bookings_by_space($space_id, $status = 1) {
+
+  $query = db_select('field_data_reserves_booking_bookingtime', 'fb');
+  $query->join('reserves_booking', 'rb', 'fb.entity_id = rb.bid');
+  $query->fields('fb', array('reserves_booking_bookingtime_value', 'reserves_booking_bookingtime_value2'));
+  $query->fields('rb', array('bid', 'pax'));
+  $query->condition('rb.sid', $space_id);
+  $query->condition('rb.status', $status);
+  $query->groupBy("fb.reserves_booking_bookingtime_value");
+  $query->addExpression('SUM(pax)', 'pax');
+  $results = $query->execute()->fetchAll();
+
+  return $results;
+}
+
+function _get_bookings_pax_by_space($space_id, $status = 1) {
+
+  $query = db_select('reserves_booking', 'rb');
+  //$query->fields('rb', array('pax'));
+  $query->condition('rb.sid', $space_id);
+  $query->condition('rb.status', $status);
+  $query->addExpression('SUM(rb.pax)', 'total');
+  $results = $query->execute()->fetch();
+
+  return $results;
 }
 
 function get_duration_from_date($date_start, $date_end) {
