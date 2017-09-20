@@ -6,8 +6,10 @@
         var popup = $('#add-booking-popup');
         var addEventForm = $('#reserves-bookings-create-booking');
         var sid = Drupal.settings.reserves.sid;
-
-        console.log(sid);
+        var now = moment();
+        var minDuration = Number(Drupal.settings.reserves.min_booking_time);
+        var maxDuration = Number(Drupal.settings.reserves.max_booking_time);
+        var granularity = Number(Drupal.settings.reserves.granularity);
 
         calendar.fullCalendar({
             defaultView: 'agendaWeek',
@@ -17,16 +19,12 @@
                     end: nowDate.clone().add(1, 'months')
                 };
             },
-            //allDaySlot: false,
-            //allDayText: false,
             firstDay: 1,
             editable: true,
             eventStartEditable: false,
             eventDurationEditable: false,
             forceEventDuration: true,
             selectable: true,
-            //selectHelper: true,
-            //unselectAuto: false,
             selectMinDistance: 20,
             minTime: "08:00:00",
             maxTime: "22:00:00",
@@ -49,16 +47,12 @@
             }],
             select: function (start, final, jsEvent, view) {
 
-                console.log(jsEvent);
-
                 calendar.fullCalendar('removeEvents', 0);
-
-                var end = start.clone().add(2, 'hours');
+                var duration = final.diff(start, 'minutes');
 
                 var event = new Object();
                 event.id = 0;
                 event.start = start;
-                event.end = end;
                 event.title = "Nova reserva";
                 event.description = "Omple el formulari per guardar-la";
                 event.overlap = false;
@@ -66,17 +60,32 @@
                 event.editable = true;
                 event.startEditable = true;
 
-                var duration = start.clone().add(2, 'hour');
+                if (start >= now) {
+                    if (duration >= minDuration) {
+                        if (duration % granularity == 0) {
+                            console.log('is granular');
+                            event.end = final;
+                        } else {
+                            console.log('is not granular');
+                            var newend = duration - granularity;
+                            event.end = final.subtract(newend, 'minutes');
+                        }
+                        if (duration >= maxDuration) {
+                            event.end = start.clone().add(maxDuration, 'minutes');
+                        }
+                        calendar.fullCalendar('renderEvent', event);
+                        popup.show();
+                        scrollToForm();
 
-                if (duration <= final) {
-                    calendar.fullCalendar('renderEvent', event);
-                    popup.show();
+                    } else {
+                        calendar.fullCalendar('unselect');
+                    }
                 } else {
                     calendar.fullCalendar('unselect');
                 }
 
                 addEventForm.find('#edit-date-start').val(start.format('H:mm'));
-                addEventForm.find('#edit-date-end').val(end.format('H:mm'));
+                addEventForm.find('#edit-date-end').val(final.format('H:mm'));
                 addEventForm.find('#edit-booking-day').val(start.format('D/M/YYYY'));
 
             },
@@ -94,6 +103,7 @@
                 console.log(event);
                 if (event.editable) {;
                     popup.show();
+
                     addEventForm.find('#edit-date-start').val(event.start.format('H:mm'));
                     addEventForm.find('#edit-date-start').value = event.start.format('H:mm');
                     addEventForm.find('#edit-date-end').val(event.end.format('H:mm'));
@@ -103,6 +113,7 @@
                     for (var i = 1; i < event.pax + 1; i++) {
                         addEventForm.find('#edit-pax').append('<option value=' + i + '>' + i + '</option>');
                     };
+                    scrollToForm();
                 }
 
             },
@@ -120,9 +131,9 @@
                         }
                     });
                 }
-            },
-            eventResizeStop: function (event, jsEvent, ui, view) {
-                console.log('test');
+                if (event.start < now) {
+                    event.color = "brown";
+                }
             },
 
         });
@@ -155,6 +166,12 @@
             openingTimes.push(day);
         };
         return openingTimes;
+    }
+
+    function scrollToForm() {
+        $('html, body').animate({
+            scrollTop: $('#add-booking-popup').offset().top
+        }, 1000);
     }
 
 }(jQuery, Drupal));

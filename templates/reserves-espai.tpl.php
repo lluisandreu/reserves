@@ -14,5 +14,4 @@
 <div id="add-booking-popup" class="add-booking-popup" style="display: none;">
 	<h2>Confirma la teva reserva</h2>
 	<?php print $add_event_form; ?>
-
 </div>

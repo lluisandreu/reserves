@@ -1,0 +1,229 @@
+<?php
+
+/**
+ * Implements hook_install().
+ */
+function reserves_users_install() {
+  // Create a new role and grant permissions
+	if(user_role_load_by_name("usuari_reserves") == FALSE) {
+		$new_role = new stdClass();
+		$new_role->name = "usuari_reserves";
+		user_role_save($new_role);
+		user_role_grant_permissions($new_role->rid, array('view bookable spaces', 'create bookings'));
+		watchdog('reserves_users', 'El rol "usuari_reserves" ha estat creat', NULL, WATCHDOG_NOTICE);
+		variable_set('user_email_verification', 0);
+	}
+
+	if (!field_info_field('field_reserves_birthdate')) {
+		$field = array(
+			'active' => 1,
+		    'cardinality' => 1,
+		    'deleted' => 0,
+		    'entity_types' => array('user'),
+		    'field_name' => 'field_reserves_birthdate',
+		    'indexes' => array(),
+		    'locked' => 0,
+		    'module' => 'date',
+		    'settings' => array(
+		      'cache_count' => 4,
+		      'cache_enabled' => 0,
+		      'granularity' => array(
+		        'day' => 'day',
+		        'hour' => 0,
+		        'minute' => 0,
+		        'month' => 'month',
+		        'second' => 0,
+		        'year' => 'year',
+		      ),
+		      'repeat' => 0,
+		      'timezone_db' => '',
+		      'todate' => '',
+		      'tz_handling' => 'none',
+		    ),
+		    'translatable' => 0,
+		    'type' => 'datetime',
+		);
+		field_create_field($field);
+
+		$instance = array(
+			'bundle' => 'user',
+		    'deleted' => 0,
+		    'description' => '',
+		    'display' => array(
+		      'default' => array(
+		        'label' => 'above',
+		        'module' => 'date',
+		        'settings' => array(
+		          'format_type' => 'long',
+		          'fromto' => 'both',
+		          'multiple_from' => '',
+		          'multiple_number' => '',
+		          'multiple_to' => '',
+		          'show_remaining_days' => FALSE,
+		          'show_repeat_rule' => 'show',
+		        ),
+		        'type' => 'date_default',
+		        'weight' => 2,
+		      ),
+		    ),
+		    'entity_type' => 'user',
+		    'field_name' => 'field_reserves_birthdate',
+		    'label' => 'Data naixement',
+		    'required' => 0,
+		    'settings' => array(
+		      'default_value' => 'now',
+		      'default_value2' => 'same',
+		      'default_value_code' => '',
+		      'default_value_code2' => '',
+		      'user_register_form' => 0,
+		    ),
+		    'widget' => array(
+		      'active' => 1,
+		      'module' => 'date',
+		      'settings' => array(
+		        'increment' => 15,
+		        'input_format' => 'd/m/Y',
+		        'input_format_custom' => '',
+		        'label_position' => 'above',
+		        'no_fieldset' => 0,
+		        'repeat_collapsed' => 0,
+		        'text_parts' => array(),
+		        'year_range' => '-3:+3',
+		      ),
+		      'type' => 'date_select',
+		      'weight' => 43,
+		    ),
+		);
+		field_create_instance($instance);
+	}
+	if (!field_info_field('field_reserves_dni')) {
+		$field = array(
+			'active' => 1,
+		    'cardinality' => 1,
+		    'deleted' => 0,
+		    'entity_types' => array('user'),
+		    'field_name' => 'field_reserves_dni',
+		    'indexes' => array(
+		      'format' => array(
+		        0 => 'format',
+		      ),
+		    ),
+		    'locked' => 0,
+		    'module' => 'text',
+		    'settings' => array(
+		      'max_length' => 255,
+		    ),
+		    'translatable' => 0,
+		    'type' => 'text',
+		);
+		field_create_field($field);
+
+		$instance = array(
+			'bundle' => 'user',
+		    'default_value' => NULL,
+		    'deleted' => 0,
+		    'description' => '',
+		    'display' => array(
+		      'default' => array(
+		        'label' => 'above',
+		        'module' => 'text',
+		        'settings' => array(),
+		        'type' => 'text_default',
+		        'weight' => 0,
+		      ),
+		    ),
+		    'entity_type' => 'user',
+		    'field_name' => 'field_reserves_dni',
+		    'label' => 'DNI',
+		    'required' => 0,
+		    'settings' => array(
+		      'text_processing' => 0,
+		      'user_register_form' => 0,
+		    ),
+		    'widget' => array(
+		      'active' => 1,
+		      'module' => 'text',
+		      'settings' => array(
+		        'size' => 60,
+		      ),
+		      'type' => 'text_textfield',
+		      'weight' => 41,
+		    ),
+		);
+		field_create_instance($instance);
+	}
+	if (!field_info_field('field_reserves_tel')) {
+		$field = array(
+			'active' => 1,
+		    'cardinality' => 1,
+		    'deleted' => 0,
+		    'entity_types' => array(),
+		    'field_name' => 'field_reserves_tel',
+		    'indexes' => array(
+		      'format' => array(
+		        0 => 'format',
+		      ),
+		    ),
+		    'locked' => 0,
+		    'module' => 'text',
+		    'settings' => array(
+		      'max_length' => 255,
+		    ),
+		    'translatable' => 0,
+		    'type' => 'text',
+		);
+		field_create_field($field);
+
+		$instance = array(
+			'bundle' => 'user',
+		    'default_value' => NULL,
+		    'deleted' => 0,
+		    'description' => '',
+		    'display' => array(
+		      'default' => array(
+		        'label' => 'above',
+		        'module' => 'text',
+		        'settings' => array(),
+		        'type' => 'text_default',
+		        'weight' => 1,
+		      ),
+		    ),
+		    'entity_type' => 'user',
+		    'field_name' => 'field_reserves_tel',
+		    'label' => 'Telèfon',
+		    'required' => 0,
+		    'settings' => array(
+		      'text_processing' => 0,
+		      'user_register_form' => 0,
+		    ),
+		    'widget' => array(
+		      'active' => 1,
+		      'module' => 'text',
+		      'settings' => array(
+		        'size' => 60,
+		      ),
+		      'type' => 'text_textfield',
+		      'weight' => 42,
+		    ),
+		);
+		field_create_instance($instance);
+	}
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function reserves_users_uninstall() {
+  
+	user_role_delete("usuari_reserves");
+	watchdog('reserves_users', 'El rol "usuari_reserves" ha estat eliminat', NULL, WATCHDOG_NOTICE);
+
+	$fields_toremove = array('field_reserves_birthdate', 'field_reserves_dni', 'field_reserves_tel');
+	foreach ($fields_toremove as $key => $field) {
+		$instance = field_info_instance("user", $field, "user");
+		if ($instance) {
+			field_delete_instance($instance, TRUE);
+		}
+	}
+
+}

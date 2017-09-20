@@ -1,0 +1,86 @@
+<?php
+
+
+/**
+ * Implements hook_menu().
+ */
+function reserves_users_menu() {
+
+  $items['reserves/usuaris/nou'] = array(
+    'title' => 'Registre d\'usuaris',
+    'page callback' => 'reserves_users_register',
+    'access callback' => TRUE,
+  );
+
+  $items['reserves/usuaris/login'] = array(
+    'title' => 'Accés d\'usuaris',
+    'page callback' => 'reserves_users_login',
+    'access callback' => TRUE,
+  );
+
+  $items['user/%user/reserves'] = array(
+    'title' => 'Les meves reserves',
+    'page callback' => 'reserves_users_user_bookings',
+    'page arguments' => array(1),
+    'access callback' => TRUE,
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+function reserves_users_register() {
+
+	global $user;
+
+	if($user->uid == 0 || $user->uid == 1) {
+		$id = "reserves_users_register";
+		$register_form = drupal_get_form("user_register_form", $id);
+		return $register_form;
+	} else {
+		drupal_goto('user/' . $user->uid);
+	}
+	
+}
+
+function reserves_users_login() {
+
+	global $user;
+	if($user->uid == 0 || $user->uid == 1) {
+		$id = "reserves_users_login";
+		$login_form = drupal_get_form("user_login", $id);
+		return $login_form;
+	} else {
+		drupal_goto('user/' . $user->uid);
+	}
+}
+
+function reserves_users_user_bookings($user_id) {
+	dpm($user_id);
+	return "test";
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function reserves_users_form_user_register_form_alter(&$form, &$form_state, $form_id) {
+
+	if($form_state['build_info']['args'][0] == 'reserves_users_register') {
+		$form['field_reserves_birthdate']['#access'] = TRUE;
+		$form['field_reserves_dni']['#access'] = TRUE;
+		$form['field_reserves_tel']['#access'] = TRUE;
+		$form['account']['roles']['#access'] = FALSE;
+		$form['account']['roles']['#default_value'] = array(11);
+
+		dpm($form);
+	}
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function reserves_users_form_user_login_alter(&$form, &$form_state, $form_id) {
+	if($form_state['build_info']['args'][0] == 'reserves_users_login') {
+		//dpm($form);
+	}
+}
