@@ -55,9 +55,49 @@ function reserves_users_login() {
 	}
 }
 
-function reserves_users_user_bookings($user_id) {
-	dpm($user_id);
-	return "test";
+function reserves_users_user_bookings($user) {
+	
+	$markup = array();
+  	$rows = array();
+	$bookings_id = _get_bookingsid_from_userid($user->uid);
+
+	foreach ($bookings_id as $key => $id) {
+		$booking = reserves_booking_load($id->bid);
+		$espai_title = get_espai_name_by_id($booking->sid);
+		$rows[] = array(
+			'data' => array(
+				'id' => $booking->bid,
+				'sid' => l($espai_title, 'espai/' . $booking->sid),
+				'booking_day' => format_date(strtotime($booking->reserves_booking_bookingtime['und'][0]['value']), 'custom', 'd/m/Y'),
+				'booking_time' => 'De ' . format_date(strtotime($booking->reserves_booking_bookingtime['und'][0]['value']), 'custom', 'H:i') . ' a ' . format_date(strtotime($booking->reserves_booking_bookingtime['und'][0]['value2']), 'custom', 'H:i'),
+				'pax' => $booking->pax,
+				'status' => booking_format_status($booking->status),
+				'created' => format_date($booking->created, 'short'),
+			),
+		);
+	}
+
+	$markup['title'] = array(
+		'#markup' => '<h2>Les meves reserves</h2>',
+	);
+
+	$markup['entity_table'] = array(
+      '#theme' => 'table',
+      '#rows' => $rows,
+      '#sticky' => TRUE,
+      '#header' => array(
+        array('data' => t('ID de la reserva'), 'field' => 'id'),
+        array('data' => t('Nom de l\'espai'), 'field' => 'sid'),
+        array('data' => t('Dia de la reserva'), 'field' => 'booking_day', 'sort' => 'asc'),
+        array('data' => t('Hores'), 'field' => 'booking_day'),
+        array('data' => t('Places reservades'), 'field' => 'pax'),
+        array('data' => t('Estat'), 'field' => 'status'),
+        array('data' => t('Data creació'), 'field' => 'created'),
+      ),
+      '#empty' =>t('No has fet cap reserva encara'),
+    );
+
+	return $markup;
 }
 
 /**
