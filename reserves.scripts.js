@@ -19,6 +19,7 @@
                     end: nowDate.clone().add(1, 'months')
                 };
             },
+            lang: "ca",
             firstDay: 1,
             editable: true,
             eventStartEditable: false,
@@ -85,7 +86,7 @@
                 }
 
                 addEventForm.find('#edit-date-start').val(start.format('H:mm'));
-                addEventForm.find('#edit-date-end').val(final.format('H:mm'));
+                addEventForm.find('#edit-date-end').val(event.end.format('H:mm'));
                 addEventForm.find('#edit-booking-day').val(start.format('D/M/YYYY'));
 
             },

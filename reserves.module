@@ -149,6 +149,7 @@ function reserves_menu() {
     'page callback' => 'reserves_bookings_json_byspace',
     'access arguments' => array('add bookable spaces'),
     'page arguments' => array(1),
+    'access callback' => TRUE,
   );
 
   $items['espais/festes/%reserves_espai/json'] = array(
@@ -156,6 +157,7 @@ function reserves_menu() {
     'page callback' => 'reserves_bookings_holidays_json_byspace',
     'access arguments' => array('add bookable spaces'),
     'page arguments' => array(2),
+    'access callback' => TRUE,
   );
 
   return $items;
@@ -439,7 +441,7 @@ function reserves_libraries_info() {
     'download url' => 'https://github.com/arshaw/fullcalendar/releases/download/v3.5.1/fullcalendar-3.5.1.zip',
     'version callback' => 'short_circuit_version',
     'files' => array(
-      'js' => array('fullcalendar.min.js'),
+      'js' => array('fullcalendar.min.js', '/locale/ca.js'),
       'css' => array('fullcalendar.min.css'),
     ),
   );
@@ -468,25 +470,9 @@ function short_circuit_version() {
 function reserves_views_api() {
   return array(
     'api' => '3.0',
+    'template path' => drupal_get_path('module', 'reserves') . '/templates',
  );
 }
-
-/**
- * Implementation of hook_views_default_views().
- */
-function reserves_views_default_views() {
-  
-  $files = file_scan_directory(drupal_get_path('module', 'reserves') . '/views', '/\.view/');
-  foreach ($files as $absolute => $file) {
-    require $absolute;
-    if (isset($view)) {
-      $views[$file->name] = $view;
-    }
-  }
-  return $views;
-
-}
-
 
 /* Custom funcions */
 

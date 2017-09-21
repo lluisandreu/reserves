@@ -52,6 +52,13 @@ function reserves_install() {
 			'field_name' => ESPAI.'_images',
 			'type' => 'image',
 			'entity_types' => array(ESPAI),
+			'module' => 'image',
+			'settings' => array(
+		      'default_image' => 0,
+		      'uri_scheme' => 'public',
+		    ),
+		    'translatable' => 0,
+		    'type' => 'image',
 		);
 		field_create_field($field);
 	}
@@ -62,8 +69,37 @@ function reserves_install() {
 			'bundle' => ESPAI,
 			'label' => 'Imatges destacades',
 			'widget' => array(
-				'type' => 'image_image',
-			),
+		      'module' => 'image',
+		      'settings' => array(
+		        'preview_image_style' => 'thumbnail',
+		        'progress_indicator' => 'throbber',
+		      ),
+		      'type' => 'image_image',
+		      'weight' => 1,
+		    ),
+			'display' => array(
+		      'default' => array(
+		        'label' => 'hidden',
+		        'module' => 'image',
+		        'settings' => array(
+		          'image_link' => '',
+		          'image_style' => 'medium',
+		        ),
+		        'type' => 'image',
+		        'weight' => 1,
+		      ),
+		    ),
+		    'settings' => array(
+		      'alt_field' => 0,
+		      'default_image' => 0,
+		      'file_directory' => '',
+		      'file_extensions' => 'png gif jpg jpeg',
+		      'max_filesize' => '',
+		      'max_resolution' => '',
+		      'min_resolution' => '',
+		      'title_field' => 0,
+		      'user_register_form' => FALSE,
+		    ),
 		);
 		field_create_instance($instance);
 	}
@@ -116,6 +152,8 @@ function reserves_install() {
 	if (!field_info_instance(ESPAI, ESPAI.'_times', ESPAI)) {
 		$instance = array(
 			'bundle' => ESPAI,
+		    'default_value' => NULL,
+		    'deleted' => 0,
 		    'description' => '',
 		    'display' => array(
 		      'default' => array(
@@ -123,16 +161,16 @@ function reserves_install() {
 		        'module' => 'office_hours',
 		        'settings' => array(
 		          'closedformat' => 'Tancat',
-		          'compress' => FALSE,
+		          'compress' => 0,
 		          'current_status' => array(
 		            'closed_text' => 'Obert ara',
 		            'open_text' => 'Obert ara!',
-		            'position' => 'hide',
+		            'position' => 'before',
 		          ),
 		          'date_first_day' => 1,
 		          'daysformat' => 'long',
 		          'grouped' => 0,
-		          'hoursformat' => 0,
+		          'hoursformat' => 2,
 		          'separator_day_hours' => ': ',
 		          'separator_days' => '<br />',
 		          'separator_grouped_days' => ' - ',
@@ -152,7 +190,7 @@ function reserves_install() {
 		      ),
 		    ),
 		    'entity_type' => ESPAI,
-		    'field_name' =>  ESPAI.'_times',
+		    'field_name' => ESPAI. '_times',
 		    'label' => 'Horaris d\'apertura',
 		    'required' => 1,
 		    'settings' => array(
@@ -173,6 +211,7 @@ function reserves_install() {
 		    'entity_types' => array(ESPAI),
 		    'field_name' => ESPAI.'_festivities',
 		    'module' => 'date',
+		    'locked' => 1,
 		    'cardinality' => -1,
 		    'settings' => array(
 		      'cache_count' => 4,
@@ -185,6 +224,7 @@ function reserves_install() {
 		        'second' => 0,
 		        'year' => 'year',
 		      ),
+		      'repeat' => 1,
 		      'timezone_db' => '',
 		      'todate' => '',
 		      'tz_handling' => 'none',
@@ -235,7 +275,7 @@ function reserves_install() {
 		      'module' => 'date',
 		      'settings' => array(
 		        'increment' => 15,
-		        'input_format' => 'j M Y - g:i:sa',
+		        'input_format' => 'j M Y',
 		        'input_format_custom' => '',
 		        'label_position' => 'above',
 		        'no_fieldset' => 0,
