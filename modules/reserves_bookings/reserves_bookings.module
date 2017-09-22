@@ -87,8 +87,8 @@ function reserves_bookings_menu() {
     'title arguments' => array(1),
     'page callback' => 'reserves_booking_view',
     'page arguments' => array(1),
-    'acces arguments' => array('manage bookings'),
-    'access callback' => TRUE,
+    'access callback' => 'reserves_access',
+    'access arguments' => array('view'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
@@ -103,7 +103,6 @@ function reserves_bookings_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('reserves_bookings_form', 3),
     'access arguments' => array('manage bookings'),
-    'access callback' => TRUE,
     'type' => MENU_LOCAL_TASK,
   );
 
@@ -112,11 +111,23 @@ function reserves_bookings_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('reserves_bookings_delete_confirm', 3),
     'access arguments' => array('manage bookings'),
-    'access callback' => TRUE,
     'type' => MENU_LOCAL_TASK,
   );
 
   return $items;
+}
+
+function reserves_access($op, $account = NULL) {
+
+  if (empty($account)) {
+    $account = $GLOBALS['user'];
+  }
+
+  if ($op == 'view') {
+    if (user_access('view bookings', $account)) {
+      return TRUE;
+    }
+  }
 }
 
 function reserves_list() {
@@ -131,13 +142,13 @@ function reserves_list() {
   foreach ($bookings_id as $key => $id) {
     $entity = reserves_booking_load($id->bid);
     $espai_title = get_espai_name_by_id($entity->sid);
-    $user = user_load($entity->uid);
+    $theuser = user_load($entity->uid);
     $duration = get_duration_from_date($entity->reserves_booking_bookingtime['und'][0]['value'], $entity->reserves_booking_bookingtime['und'][0]['value2']);
     $rows[] = array(
         'data' => array(
-            'id' => $entity->bid,
+            'id' => l($entity->bid, 'reserva/' . $entity->bid),
             'sid' => l($espai_title, 'espai/' . $entity->sid),
-            'uid' => l($user->name, 'user/' . $entity->uid),
+            'uid' => l($theuser->name, 'user/' . $entity->uid),
             'pax' => $entity->pax,
             'booking_day' => format_date(strtotime($entity->reserves_booking_bookingtime['und'][0]['value']), 'custom', 'd/m/Y'),
             'booking_time' => 'De ' . format_date(strtotime($entity->reserves_booking_bookingtime['und'][0]['value']), 'custom', 'H:i') . ' a ' . format_date(strtotime($entity->reserves_booking_bookingtime['und'][0]['value2']), 'custom', 'H:i'),
@@ -227,8 +238,6 @@ function reserves_bookings_json_byspace($space) {
   $bookings = _get_bookings_by_space($space_id, 1);
   $max_pax = $space->reserves_espai_slots['und'][0]['value'];
 
-  //dpm($space);
-
   foreach ($bookings as $key => $booking) {
 
      $json[] = array(
@@ -244,12 +253,8 @@ function reserves_bookings_json_byspace($space) {
       'constraint' => "businessHours",
      );
   }
-
-  //dpm($json);
   
   drupal_json_output($json);
-
-  //return 'test';
 
 }
 
@@ -263,7 +268,7 @@ function reserves_bookings_holidays_json_byspace($space) {
       $json[] = array(
         'id' => 'holiday-' . $key,
         'type' => 'holiday',
-        'title' => 'Tancat per vacances',
+        'title' => 'Espai tancat',
         'start' => format_date(strtotime($fest['value']), 'custom', 'Y-m-d'),
         'className' => 'holiday',
         'allDay' => true,
@@ -469,8 +474,6 @@ function reserves_bookings_create_booking($form, &$form_state, $entity) {
 
 function reserves_bookings_create_booking_validate($form, $form_state) {
 
-  //dpm($form_state);
-
   $sid = $form_state['values']['sid'];
   $booking_day = $form_state['values']['booking_day'];
   $start = strtotime($booking_day . ' ' . $form_state['values']['date_start']);
@@ -494,8 +497,6 @@ function reserves_bookings_create_booking_validate($form, $form_state) {
 function reserves_bookings_create_booking_submit($form, $form_state) {
 
     global $language;
-
-    dpm($form_state);
 
     $booking_day = str_replace("/", "-", $form_state['values']['booking_day']);
     $start = $booking_day . " " . $form_state['values']['date_start'];
@@ -524,7 +525,7 @@ function reserves_bookings_create_booking_submit($form, $form_state) {
 
     //$form_state['redirect'] = 'admin/structure/reserves/manage';
 
-    drupal_set_message(t("La teva reserva #" . $entity->bid . " ha estat creada"), 'status', TRUE);
+    drupal_set_message(t("La reserva #" . $entity->bid . " ha estat creada. Pots veure les teves reserves a " . l('Les meves reserves', 'user/' . $entity->uid . '/reserves')), 'status', TRUE);
   
 }
 

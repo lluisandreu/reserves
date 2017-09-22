@@ -22,7 +22,8 @@ function reserves_users_menu() {
     'title' => 'Les meves reserves',
     'page callback' => 'reserves_users_user_bookings',
     'page arguments' => array(1),
-    'access callback' => TRUE,
+    'access callback' => 'reserves_access',
+    'access arguments' => array('view'),
     'type' => MENU_LOCAL_TASK,
   );
 
@@ -66,7 +67,7 @@ function reserves_users_user_bookings($user) {
 		$espai_title = get_espai_name_by_id($booking->sid);
 		$rows[] = array(
 			'data' => array(
-				'id' => $booking->bid,
+				'id' => l($booking->bid, 'reserva/' . $booking->bid),
 				'sid' => l($espai_title, 'espai/' . $booking->sid),
 				'booking_day' => format_date(strtotime($booking->reserves_booking_bookingtime['und'][0]['value']), 'custom', 'd/m/Y'),
 				'booking_time' => 'De ' . format_date(strtotime($booking->reserves_booking_bookingtime['und'][0]['value']), 'custom', 'H:i') . ' a ' . format_date(strtotime($booking->reserves_booking_bookingtime['und'][0]['value2']), 'custom', 'H:i'),
@@ -111,16 +112,5 @@ function reserves_users_form_user_register_form_alter(&$form, &$form_state, $for
 		$form['field_reserves_tel']['#access'] = TRUE;
 		$form['account']['roles']['#access'] = FALSE;
 		$form['account']['roles']['#default_value'] = array(11);
-
-		dpm($form);
-	}
-}
-
-/**
- * Implements hook_form_alter().
- */
-function reserves_users_form_user_login_alter(&$form, &$form_state, $form_id) {
-	if($form_state['build_info']['args'][0] == 'reserves_users_login') {
-		//dpm($form);
 	}
 }

@@ -52,17 +52,8 @@ function reserves_users_install() {
 		    'display' => array(
 		      'default' => array(
 		        'label' => 'above',
-		        'module' => 'date',
-		        'settings' => array(
-		          'format_type' => 'long',
-		          'fromto' => 'both',
-		          'multiple_from' => '',
-		          'multiple_number' => '',
-		          'multiple_to' => '',
-		          'show_remaining_days' => FALSE,
-		          'show_repeat_rule' => 'show',
-		        ),
-		        'type' => 'date_default',
+		        'settings' => array(),
+		        'type' => 'hidden',
 		        'weight' => 2,
 		      ),
 		    ),
@@ -126,10 +117,9 @@ function reserves_users_install() {
 		    'display' => array(
 		      'default' => array(
 		        'label' => 'above',
-		        'module' => 'text',
 		        'settings' => array(),
-		        'type' => 'text_default',
-		        'weight' => 0,
+		        'type' => 'hidden',
+		        'weight' => 2,
 		      ),
 		    ),
 		    'entity_type' => 'user',
@@ -182,10 +172,9 @@ function reserves_users_install() {
 		    'display' => array(
 		      'default' => array(
 		        'label' => 'above',
-		        'module' => 'text',
 		        'settings' => array(),
-		        'type' => 'text_default',
-		        'weight' => 1,
+		        'type' => 'hidden',
+		        'weight' => 2,
 		      ),
 		    ),
 		    'entity_type' => 'user',

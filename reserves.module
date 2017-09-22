@@ -11,15 +11,6 @@
  * Implements hook_entity_info().
  */
 
-/**
- * Implements hook_init().
- */
-function reserves_init() {
-  /*
-   *drupal_add_css(drupal_get_path('module', 'book') . '/book.css');
-   */
-}
-
 function reserves_entity_info() {
 
 	$info = array();
@@ -69,12 +60,16 @@ function reserves_permission() {
      *),
      */
     'view bookable spaces' =>  array(
-      'title' => t('Veure espais o recursos reservables'),
+      'title' => t('Veure els espais'),
       'description' => t('Veure els espais reservables.'),
     ),
     'add bookable spaces' => array(
-    	'title' => t('Editar els espais o recursos reservables'),
+    	'title' => t('Editar els espais'),
     	'description' => t('Editar els espais o recursos reservables.'),
+    ),
+    'manage bookable spaces' => array(
+      'title' => t('Administrar els espais'),
+      'description' => t('Editar o eliminar espais'),
     ),
   );
 }
@@ -107,8 +102,8 @@ function reserves_menu() {
     'title arguments' => array(1),
     'page callback' => 'reserves_espai_view',
     'page arguments' => array(1),
-    'acces arguments' => array('Veure espais o recursos reservables'),
-    'access callback' => TRUE,
+    'access callback' => 'espais_access',
+    'access arguments' => array('view'),
   );
 
   $item['espai/%reserves_espai/view'] = array(
@@ -121,8 +116,7 @@ function reserves_menu() {
   	'title' => 'Edita un espai o recurs',
   	'page callback' => 'drupal_get_form',
   	'page arguments' => array('reserves_espai_form', 3),
-  	'access arguments' => array('add bookable spaces'),
-  	'access callback' => TRUE,
+  	'access arguments' => array('manage bookable spaces'),
     'type' => MENU_LOCAL_TASK,
   );
 
@@ -130,8 +124,7 @@ function reserves_menu() {
     'title' => 'Elimina aquest espai',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('espai_delete_confirm', 3),
-    'access arguments' => array('add bookable spaces'),
-    'access callback' => TRUE,
+    'access arguments' => array('manage bookable spaces'),
     'type' => MENU_LOCAL_TASK,
   );
 
@@ -141,6 +134,8 @@ function reserves_menu() {
     'access arguments' => 'view bookable spaces',
     'access callback' => TRUE,
     'type' => MENU_NORMAL_ITEM,
+    'access callback' => 'espais_access',
+    'access arguments' => array('view'),
 
   );
 
@@ -149,7 +144,8 @@ function reserves_menu() {
     'page callback' => 'reserves_bookings_json_byspace',
     'access arguments' => array('add bookable spaces'),
     'page arguments' => array(1),
-    'access callback' => TRUE,
+    'access callback' => 'espais_access',
+    'access arguments' => array('view'),
   );
 
   $items['espais/festes/%reserves_espai/json'] = array(
@@ -157,15 +153,27 @@ function reserves_menu() {
     'page callback' => 'reserves_bookings_holidays_json_byspace',
     'access arguments' => array('add bookable spaces'),
     'page arguments' => array(2),
-    'access callback' => TRUE,
+    'access callback' => 'espais_access',
+    'access arguments' => array('view'),
   );
 
   return $items;
 }
 
-/**
- * Callback for a page title when this entity is displayed.
- */
+
+function espais_access($op, $account = NULL) {
+
+  if (empty($account)) {
+    $account = $GLOBALS['user'];
+  }
+
+  if ($op == 'view') {
+    if (user_access('view bookable spaces', $account)) {
+      return TRUE;
+    }
+  }
+}
+
 function reserves_espai_title($entity) {
   return $entity->title;
 }
@@ -179,7 +187,6 @@ function reserves_espai_list() {
 
   if (!empty($entities)) {
     foreach ($entities as $key => $entity) {
-     //dpm($entity);
      $rows[] = array(
         'data' => array(
             'id' => $entity->sid,
@@ -335,8 +342,6 @@ function espais_add() {
  * Implements hook_form().
  */
 function reserves_espai_form($form, &$form_state, $entity) {
-
-  //dpm($entity);
 
   $form_state['espai'] = $entity;
 
@@ -566,10 +571,6 @@ function reserves_validate_booking_dates($date_start, $date_end, $espai_id) {
   $query->fields('fb', array('reserves_booking_bookingtime_value', 'reserves_booking_bookingtime_value2'));
   $query->condition('rb.sid', $espai_id, "=");
   $result = $query->execute();
-
-  foreach ($result as $key => $record) {
-    //dpm($record);
-  }
 }
 
 function get_duration_from_date($date_start, $date_end) {

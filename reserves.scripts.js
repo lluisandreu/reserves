@@ -22,6 +22,7 @@
             lang: "ca",
             firstDay: 1,
             editable: true,
+            allDayText: 'Tot el dia',
             eventStartEditable: false,
             eventDurationEditable: false,
             forceEventDuration: true,
@@ -50,6 +51,7 @@
 
                 calendar.fullCalendar('removeEvents', 0);
                 var duration = final.diff(start, 'minutes');
+                var allDay = !start.hasTime() && !final.hasTime();
 
                 var event = new Object();
                 event.id = 0;
@@ -60,23 +62,28 @@
                 event.constraint = "businessHours";
                 event.editable = true;
                 event.startEditable = true;
+                event.allDay = false;
 
-                if (start >= now) {
+                if (start >= now && !allDay) {
                     if (duration >= minDuration) {
                         if (duration % granularity == 0) {
-                            console.log('is granular');
                             event.end = final;
                         } else {
-                            console.log('is not granular');
                             var newend = duration - granularity;
                             event.end = final.subtract(newend, 'minutes');
                         }
                         if (duration >= maxDuration) {
                             event.end = start.clone().add(maxDuration, 'minutes');
                         }
+
                         calendar.fullCalendar('renderEvent', event);
                         popup.show();
+
                         scrollToForm();
+
+                        addEventForm.find('#edit-date-start').val(start.format('H:mm'));
+                        addEventForm.find('#edit-date-end').val(event.end.format('H:mm'));
+                        addEventForm.find('#edit-booking-day').val(start.format('D/M/YYYY'));
 
                     } else {
                         calendar.fullCalendar('unselect');
@@ -85,14 +92,8 @@
                     calendar.fullCalendar('unselect');
                 }
 
-                addEventForm.find('#edit-date-start').val(start.format('H:mm'));
-                addEventForm.find('#edit-date-end').val(event.end.format('H:mm'));
-                addEventForm.find('#edit-booking-day').val(start.format('D/M/YYYY'));
-
             },
             eventDrop: function (event, delta, revertFunc, jsEvent, ui, view) {
-
-                console.log(event);
 
                 addEventForm.find('#edit-date-start').val(event.start.format('H:mm'));
                 addEventForm.find('#edit-date-start').value = event.start.format('H:mm');
@@ -101,10 +102,8 @@
 
             },
             eventClick: function (event, jsEvent, view) {
-                console.log(event);
                 if (event.editable) {;
                     popup.show();
-
                     addEventForm.find('#edit-date-start').val(event.start.format('H:mm'));
                     addEventForm.find('#edit-date-start').value = event.start.format('H:mm');
                     addEventForm.find('#edit-date-end').val(event.end.format('H:mm'));
@@ -124,16 +123,15 @@
                     var start = event.start.format('YYYY-MM-DD');
                     $('.fc-day').each(function (index, el) {
                         if ($(this).data('date') == start) {
-                            console.log($(this).data('date'));
-                            $(this).css({
-                                background: 'yellow',
-                                cursor: 'not-allowed'
-                            });;
+                            $(this).addClass('event-holiday');
                         }
                     });
                 }
                 if (event.start < now) {
-                    event.color = "brown";
+                    element.addClass('event-old');
+                    if (!element.hasClass('holiday')) {
+                        element.find('.fc-title').text('Reserva passada');
+                    }
                 }
             },
 
