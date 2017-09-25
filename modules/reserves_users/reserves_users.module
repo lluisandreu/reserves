@@ -1,0 +1,123 @@
+<?php
+
+/**
+* @file
+* Módul per a la reserva de recursos d'un Ajuntament o Institució. 
+* Desenvolupat per Lluis A. Oliver. 
+* www.lluisandreu.com
+*/
+
+
+/**
+ * Implements hook_menu().
+ */
+function reserves_users_menu() {
+
+  $items['reserves/usuaris/nou'] = array(
+    'title' => 'Registre d\'usuaris',
+    'page callback' => 'reserves_users_register',
+    'access callback' => TRUE,
+  );
+
+  $items['reserves/usuaris/login'] = array(
+    'title' => 'Accés d\'usuaris',
+    'page callback' => 'reserves_users_login',
+    'access callback' => TRUE,
+  );
+
+  $items['user/%user/reserves'] = array(
+    'title' => 'Les meves reserves',
+    'page callback' => 'reserves_users_user_bookings',
+    'page arguments' => array(1),
+    'access callback' => 'reserves_access',
+    'access arguments' => array('view'),
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+function reserves_users_register() {
+
+	global $user;
+
+	if($user->uid == 0 || $user->uid == 1) {
+		$id = "reserves_users_register";
+		$register_form = drupal_get_form("user_register_form", $id);
+		return $register_form;
+	} else {
+		drupal_goto('user/' . $user->uid);
+	}
+	
+}
+
+function reserves_users_login() {
+
+	global $user;
+	if($user->uid == 0 || $user->uid == 1) {
+		$id = "reserves_users_login";
+		$login_form = drupal_get_form("user_login", $id);
+		return $login_form;
+	} else {
+		drupal_goto('user/' . $user->uid);
+	}
+}
+
+function reserves_users_user_bookings($user) {
+	
+	$markup = array();
+  	$rows = array();
+	$bookings_id = _get_bookingsid_from_userid($user->uid);
+
+	foreach ($bookings_id as $key => $id) {
+		$booking = reserves_booking_load($id->bid);
+		$espai_title = get_espai_name_by_id($booking->sid);
+		$rows[] = array(
+			'data' => array(
+				'id' => l($booking->bid, 'reserva/' . $booking->bid),
+				'sid' => l($espai_title, 'espai/' . $booking->sid),
+				'booking_day' => format_date(strtotime($booking->reserves_booking_bookingtime['und'][0]['value']), 'custom', 'd/m/Y'),
+				'booking_time' => 'De ' . format_date(strtotime($booking->reserves_booking_bookingtime['und'][0]['value']), 'custom', 'H:i') . ' a ' . format_date(strtotime($booking->reserves_booking_bookingtime['und'][0]['value2']), 'custom', 'H:i'),
+				'pax' => $booking->pax,
+				'status' => booking_format_status($booking->status),
+				'created' => format_date($booking->created, 'short'),
+			),
+		);
+	}
+
+	$markup['title'] = array(
+		'#markup' => '<h2>Les meves reserves</h2>',
+	);
+
+	$markup['entity_table'] = array(
+      '#theme' => 'table',
+      '#rows' => $rows,
+      '#sticky' => TRUE,
+      '#header' => array(
+        array('data' => t('ID de la reserva'), 'field' => 'id'),
+        array('data' => t('Nom de l\'espai'), 'field' => 'sid'),
+        array('data' => t('Dia de la reserva'), 'field' => 'booking_day', 'sort' => 'asc'),
+        array('data' => t('Hores'), 'field' => 'booking_day'),
+        array('data' => t('Places reservades'), 'field' => 'pax'),
+        array('data' => t('Estat'), 'field' => 'status'),
+        array('data' => t('Data creació'), 'field' => 'created'),
+      ),
+      '#empty' =>t('No has fet cap reserva encara'),
+    );
+
+	return $markup;
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function reserves_users_form_user_register_form_alter(&$form, &$form_state, $form_id) {
+
+	if($form_state['build_info']['args'][0] == 'reserves_users_register') {
+		$form['field_reserves_birthdate']['#access'] = TRUE;
+		$form['field_reserves_dni']['#access'] = TRUE;
+		$form['field_reserves_tel']['#access'] = TRUE;
+		$form['account']['roles']['#access'] = FALSE;
+		$form['account']['roles']['#default_value'] = array(11);
+	}
+}

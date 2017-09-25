@@ -1,11 +1,394 @@
 <?php
 
+define("ESPAI", 'reserves_espai');
+
 /**
 * @file
 * Módul per a la reserva de recursos d'un Ajuntament o Institució. 
 * Desenvolupat per Lluis A. Oliver. 
 * www.lluisandreu.com
 */
+
+/**
+ * Implements hook_install().
+ */
+function reserves_install() {
+
+	drupal_load('module', 'reserves');
+
+	// Create Body field
+	if (!field_info_field(ESPAI.'_body')) {
+		$field = array(
+			'field_name' => ESPAI.'_body',
+			'type' => 'text_with_summary',
+			'entity_types' => array(ESPAI),
+		);
+		field_create_field($field);
+	}
+	if (!field_info_instance(ESPAI, ESPAI.'_body', ESPAI)) {
+		$instance = array(
+			'field_name' => ESPAI.'_body',
+			'entity_type' => ESPAI,
+			'bundle' => ESPAI,
+			'label' => 'Descripció',
+			'required' => TRUE,
+			'widget' => array(
+				'type' => 'text_with_summary',
+			),
+			'settings' => array(
+				'display_summary' => TRUE,
+			),
+			'display' => array(
+		        'default' => array(
+		          'label' => 'hidden',
+		          'type' => 'text_default',
+		        ),
+		    ),
+	    );
+		field_create_instance($instance);
+	}
+
+	/// Field featured image
+	if (!field_info_field(ESPAI.'_images')) {
+		$field = array(
+			'field_name' => ESPAI.'_images',
+			'type' => 'image',
+			'entity_types' => array(ESPAI),
+			'module' => 'image',
+			'settings' => array(
+		      'default_image' => 0,
+		      'uri_scheme' => 'public',
+		    ),
+		    'translatable' => 0,
+		    'type' => 'image',
+		);
+		field_create_field($field);
+	}
+	if (!field_info_instance(ESPAI, ESPAI.'_images', ESPAI)) {
+		$instance = array(
+			'field_name' => ESPAI.'_images',
+			'entity_type' => ESPAI,
+			'bundle' => ESPAI,
+			'label' => 'Imatges destacades',
+			'widget' => array(
+		      'module' => 'image',
+		      'settings' => array(
+		        'preview_image_style' => 'thumbnail',
+		        'progress_indicator' => 'throbber',
+		      ),
+		      'type' => 'image_image',
+		      'weight' => 1,
+		    ),
+			'display' => array(
+		      'default' => array(
+		        'label' => 'hidden',
+		        'module' => 'image',
+		        'settings' => array(
+		          'image_link' => '',
+		          'image_style' => 'medium',
+		        ),
+		        'type' => 'image',
+		        'weight' => 1,
+		      ),
+		    ),
+		    'settings' => array(
+		      'alt_field' => 0,
+		      'default_image' => 0,
+		      'file_directory' => '',
+		      'file_extensions' => 'png gif jpg jpeg',
+		      'max_filesize' => '',
+		      'max_resolution' => '',
+		      'min_resolution' => '',
+		      'title_field' => 0,
+		      'user_register_form' => FALSE,
+		    ),
+		);
+		field_create_instance($instance);
+	}
+
+	/// Slots available field
+	if (!field_info_field(ESPAI.'_slots')) {
+		$field = array(
+			'field_name' => ESPAI.'_slots',
+			'type' => 'number_integer',
+			'entity_types' => array(ESPAI),
+			'locked' => 1,
+			'settings' => array(
+				'min' => 0,
+			),
+		);
+		field_create_field($field);
+	}
+	if (!field_info_instance(ESPAI, ESPAI.'_slots', ESPAI)) {
+		$instance = array(
+			'field_name' => ESPAI.'_slots',
+			'entity_type' => ESPAI,
+			'bundle' => ESPAI,
+			'locked' => 1,
+			'label' => 'Places disponibles',
+			'required' => TRUE,
+		);
+		field_create_instance($instance);
+	}
+
+	/// Timetable
+	if (!field_info_field(ESPAI.'_times') && module_exists('office_hours')) {
+		$field = array(
+		    'entity_types' => array(ESPAI),
+		    'field_name' => ESPAI.'_times',
+		    'module' => 'office_hours',
+		    'cardinality' => -1,
+		    'locked' => 1,
+		    'settings' => array(
+		      'cardinality' => 2,
+		      'comment' => 0,
+		      'date_first_day' => 1,
+		      'granularity' => 30,
+		      'hoursformat' => 0,
+		      'limitend' => 2300,
+		      'limitstart' => 800,
+		      'valhrs' => 1,
+		    ),
+		    'type' => 'office_hours',
+		);
+		field_create_field($field);
+	}
+	if (!field_info_instance(ESPAI, ESPAI.'_times', ESPAI) && module_exists('office_hours')) {
+		$instance = array(
+			'bundle' => ESPAI,
+		    'default_value' => NULL,
+		    'locked' => 1,
+		    'display' => array(
+		      'default' => array(
+		        'label' => 'above',
+		        'module' => 'office_hours',
+		        'settings' => array(
+		          'closedformat' => 'Tancat',
+		          'compress' => 0,
+		          'current_status' => array(
+		            'closed_text' => 'Obert ara',
+		            'open_text' => 'Obert ara!',
+		            'position' => 'before',
+		          ),
+		          'date_first_day' => 1,
+		          'daysformat' => 'long',
+		          'grouped' => 0,
+		          'hoursformat' => 2,
+		          'separator_day_hours' => ': ',
+		          'separator_days' => '<br />',
+		          'separator_grouped_days' => ' - ',
+		          'separator_hours_hours' => '-',
+		          'separator_more_hours' => ', ',
+		          'showclosed' => 'all',
+		          'timezone_field' => '',
+		        ),
+		        'type' => 'office_hours',
+		        'weight' => 1,
+		      ),
+		      'teaser' => array(
+		        'label' => 'above',
+		        'settings' => array(),
+		        'type' => 'hidden',
+		        'weight' => 0,
+		      ),
+		    ),
+		    'entity_type' => ESPAI,
+		    'field_name' => ESPAI. '_times',
+		    'label' => 'Horaris d\'apertura',
+		    'required' => 1,
+		    'settings' => array(
+		      'user_register_form' => FALSE,
+		    ),
+		    'widget' => array(
+		      'active' => 0,
+		      'module' => 'office_hours',
+		      'settings' => array(),
+		      'type' => 'office_hours_dynamic_widget',
+		      'weight' => 43,
+		    ),
+		);
+		field_create_instance($instance);
+	}
+	if (!field_info_field(ESPAI.'_festivities') && module_exists('date') && module_exists('date_popup')) {
+		$field = array(
+		    'entity_types' => array(ESPAI),
+		    'field_name' => ESPAI.'_festivities',
+		    'module' => 'date',
+		    'locked' => 1,
+		    'cardinality' => -1,
+		    'settings' => array(
+		      'cache_count' => 4,
+		      'cache_enabled' => 0,
+		      'granularity' => array(
+		        'day' => 'day',
+		        'hour' => 0,
+		        'minute' => 0,
+		        'month' => 'month',
+		        'second' => 0,
+		        'year' => 'year',
+		      ),
+		      'repeat' => 1,
+		      'timezone_db' => '',
+		      'todate' => '',
+		      'tz_handling' => 'none',
+		    ),
+		    'type' => 'datetime',
+		);
+		field_create_field($field);
+	}
+	if (!field_info_instance(ESPAI, ESPAI.'_festivities', ESPAI) && module_exists('date') && module_exists('date_popup')) { 
+		$instance = array(
+			'bundle' => ESPAI,
+		    'display' => array(
+		      'default' => array(
+		        'label' => 'above',
+		        'module' => 'date',
+		        'settings' => array(
+		          'format_type' => 'long',
+		          'fromto' => 'both',
+		          'multiple_from' => '',
+		          'multiple_number' => '',
+		          'multiple_to' => '',
+		          'show_remaining_days' => FALSE,
+		          'show_repeat_rule' => 'show',
+		        ),
+		        'type' => 'date_default',
+		        'weight' => 1,
+		      ),
+		      'teaser' => array(
+		        'label' => 'above',
+		        'settings' => array(),
+		        'type' => 'hidden',
+		        'weight' => 0,
+		      ),
+		    ),
+		    'entity_type' => ESPAI,
+		    'field_name' => ESPAI.'_festivities',
+		    'label' => 'Festius',
+		    'locked' => 1,
+		    'required' => 0,
+		    'settings' => array(
+		      'default_value' => 'now',
+		      'default_value2' => 'same',
+		      'default_value_code' => '',
+		      'default_value_code2' => '',
+		      'user_register_form' => FALSE,
+		    ),
+		    'widget' => array(
+		      'active' => 1,
+		      'module' => 'date',
+		      'settings' => array(
+		        'increment' => 15,
+		        'input_format' => 'j M Y',
+		        'input_format_custom' => '',
+		        'label_position' => 'above',
+		        'no_fieldset' => 0,
+		        'repeat_collapsed' => 1,
+		        'text_parts' => array(),
+		        'year_range' => '-0:+1',
+		      ),
+		      'type' => 'date_popup',
+		      'weight' => 42,
+		    ),
+		);
+		field_create_instance($instance);
+	}
+	/// Min booking time
+	if (!field_info_field(ESPAI.'_min_booking_time')) {
+		$field = array(
+			'field_name' => ESPAI.'_min_booking_time',
+			'type' => 'number_integer',
+			'locked' => 1,
+			'entity_types' => array(ESPAI),
+			'settings' => array(
+				'min' => 30,
+			),
+			'locked' => TRUE,
+		);
+		field_create_field($field);
+	}
+	if (!field_info_instance(ESPAI, ESPAI.'_min_booking_time', ESPAI)) {
+		$instance = array(
+			'field_name' => ESPAI.'_min_booking_time',
+			'entity_type' => ESPAI,
+			'locked' => 1,
+			'bundle' => ESPAI,
+			'label' => 'Quin és el mínim de temps que es pot reservar?',
+			'description' => 'En minuts',
+			'required' => TRUE,
+			'default_value' => 60,
+		);
+		field_create_instance($instance);
+	}
+
+	/// Max booking time
+	if (!field_info_field(ESPAI.'_max_booking_time')) {
+		$field = array(
+			'field_name' => ESPAI.'_max_booking_time',
+			'type' => 'number_integer',
+			'locked' => 1,
+			'entity_types' => array(ESPAI),
+			'locked' => TRUE,
+			'settings' => array(
+				'min' => 30,
+			),
+		);
+		field_create_field($field);
+	}
+	if (!field_info_instance(ESPAI, ESPAI.'_max_booking_time', ESPAI)) {
+		$instance = array(
+			'field_name' => ESPAI.'_max_booking_time',
+			'entity_type' => ESPAI,
+			'bundle' => ESPAI,
+			'locked' => 1,
+			'label' => 'Quin és el màxim de temps que es pot reservar?',
+			'description' => 'En minuts',
+			'required' => TRUE,
+			'default_value' => 60,
+		);
+		field_create_instance($instance);
+	}
+
+	/// Time granularity
+	if (!field_info_field(ESPAI.'_granularity')) {
+		$field = array(
+			'field_name' => ESPAI.'_granularity',
+			'type' => 'list_integer',
+			'entity_types' => array(ESPAI),
+			'cardinality' => 1,
+			'locked' => 1,
+			'settings' => array(
+			    'allowed_values' => array(
+					30 => '30',
+					60 => '60'
+				),
+			),
+		);
+		field_create_field($field);
+	}
+	if (!field_info_instance(ESPAI, ESPAI.'_granularity', ESPAI)) {
+		$instance = array(
+			'field_name' => ESPAI.'_granularity',
+			'entity_type' => ESPAI,
+			'bundle' => ESPAI,
+			'locked' => 1,
+			'label' => 'Amb quina granularitat es pot reservar?',
+			'description' => 'En minuts',
+			'required' => TRUE,
+			'widget' => array(
+				'type' => 'options_select',
+			),
+		);
+		field_create_instance($instance);
+	}
+}
+
+function _time_granularity_list() {
+	return array(
+		30 => '30',
+		60 => '60'
+	);
+}
 
 /**
  * Implements hook_schema().
@@ -64,6 +447,34 @@ function reserves_schema() {
 	'primary key' => array('sid'),
 	);
 	return $schema;
+}
+
+/**
+ * Implements hook_uninstall().
+ *
+ * At uninstall time we'll notify field.module that the entity was deleted
+ * so that attached fields can be cleaned up.
+ *
+ * @ingroup entity_example
+ */
+function reserves_uninstall() {
+
+	$fields_toremove = array('_body', '_images', '_slots', '_times', '_min_booking_time', '_max_booking_time', '_granularity', '_festivities');
+	foreach ($fields_toremove as $key => $field) {
+		$instance = field_info_instance(ESPAI, ESPAI.$field, ESPAI);
+		if ($instance) {
+			field_delete_instance($instance, TRUE);
+		}
+	}
+
+	if (module_exists('reserves_bookings')) {
+		$modules = array('reserves_bookings', 'reserves_users');
+		module_disable($modules);
+		drupal_uninstall_modules($modules);
+		drush_print($modules . ' Has been uninstalled');
+	}
+
+	field_attach_delete_bundle('reserves_espai', 'reserves_espai');
 }
 
 

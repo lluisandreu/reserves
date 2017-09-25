@@ -1,0 +1,9 @@
+name = Reserves. Les reserves
+description = Crea les entitats de tipus reserva. Les reserves són dependències dels espais
+core = 7.x
+version = 7.x-1.0
+package = Reserves
+
+files[] = reserves_bookings.controller.inc
+
+dependencies[] = reserves

@@ -1,0 +1,7 @@
+name = Reserves. Els usuaris
+description = Habilita el formulari de registre i accés i crea  els rols dels usuaris que poden fer les reserves
+version = 7.x-1.0
+core = 7.x
+package = Reserves
+
+dependencies[] = reserves
