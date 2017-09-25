@@ -26,12 +26,13 @@ function reserves_views_default_views() {
 	$handler->display->display_options['pager']['type'] = 'full';
 	$handler->display->display_options['style_plugin'] = 'default';
 	$handler->display->display_options['row_plugin'] = 'fields';
+	$handler->display->display_options['row_options']['hide_empty'] = TRUE;
+	$handler->display->display_options['row_options']['default_field_elements'] = FALSE;
 	/* Field: Espai: Espai ID */
 	$handler->display->display_options['fields']['sid']['id'] = 'sid';
 	$handler->display->display_options['fields']['sid']['table'] = 'reserves_espai';
 	$handler->display->display_options['fields']['sid']['field'] = 'sid';
 	$handler->display->display_options['fields']['sid']['label'] = '';
-	$handler->display->display_options['fields']['sid']['exclude'] = TRUE;
 	$handler->display->display_options['fields']['sid']['element_label_colon'] = FALSE;
 	$handler->display->display_options['fields']['sid']['element_default_classes'] = FALSE;
 	/* Field: Espai: Label */
@@ -57,8 +58,8 @@ function reserves_views_default_views() {
 	$handler->display->display_options['fields']['reserves_espai_slots']['element_label_type'] = 'span';
 	$handler->display->display_options['fields']['reserves_espai_slots']['element_label_colon'] = FALSE;
 	$handler->display->display_options['fields']['reserves_espai_slots']['settings'] = array(
-	'thousand_separator' => '',
-	'prefix_suffix' => 0,
+	  'thousand_separator' => '',
+	  'prefix_suffix' => 0,
 	);
 	/* Sort criterion: Espai: Label */
 	$handler->display->display_options['sorts']['title']['id'] = 'title';
@@ -69,6 +70,7 @@ function reserves_views_default_views() {
 	$handler->display->display_options['filters']['status']['table'] = 'reserves_espai';
 	$handler->display->display_options['filters']['status']['field'] = 'status';
 	$handler->display->display_options['filters']['status']['value']['value'] = '1';
+
 	$export['espais'] = $view;
 
 	return $export;

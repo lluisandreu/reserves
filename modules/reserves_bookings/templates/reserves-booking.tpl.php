@@ -10,6 +10,8 @@
 <?php $espai_title = get_espai_name_by_id($element->sid); ?>
 <?php $content = $element->content; ?>
 
+<p><a href="<?php print url('user/' . $element->uid . '/reserves'); ?>">Torna a les meves reserves</a></p>
+
 <div class="booking-entity booking-<?php print $element->bid; ?>">
 	<p><strong>Usuari: </strong><?php print l($theuser->name, 'user/' . $element->uid); ?></p>
 	<p><strong>Espai resevat: </strong><?php print l($espai_title, 'espai/' . $element->sid); ?></p>

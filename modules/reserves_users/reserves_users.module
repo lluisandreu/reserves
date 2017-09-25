@@ -30,7 +30,7 @@ function reserves_users_menu() {
     'page callback' => 'reserves_users_user_bookings',
     'page arguments' => array(1),
     'access callback' => 'reserves_access',
-    'access arguments' => array('view'),
+    'access arguments' => array('view_own'),
     'type' => MENU_LOCAL_TASK,
   );
 
@@ -113,11 +113,13 @@ function reserves_users_user_bookings($user) {
  */
 function reserves_users_form_user_register_form_alter(&$form, &$form_state, $form_id) {
 
+	$rrole = user_role_load_by_name('usuari_reserves');
+
 	if($form_state['build_info']['args'][0] == 'reserves_users_register') {
 		$form['field_reserves_birthdate']['#access'] = TRUE;
 		$form['field_reserves_dni']['#access'] = TRUE;
 		$form['field_reserves_tel']['#access'] = TRUE;
 		$form['account']['roles']['#access'] = FALSE;
-		$form['account']['roles']['#default_value'] = array(11);
+		$form['account']['roles']['#default_value'] = array($rrole->rid);
 	}
 }

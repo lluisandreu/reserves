@@ -16,7 +16,7 @@ function reserves_users_install() {
 		$new_role = new stdClass();
 		$new_role->name = "usuari_reserves";
 		user_role_save($new_role);
-		user_role_grant_permissions($new_role->rid, array('view bookable spaces', 'create bookings'));
+		user_role_grant_permissions($new_role->rid, array('view bookable spaces', 'create bookings', 'view own bookings'));
 		watchdog('reserves_users', 'El rol "usuari_reserves" ha estat creat', NULL, WATCHDOG_NOTICE);
 		variable_set('user_email_verification', 0);
 	}
@@ -86,7 +86,7 @@ function reserves_users_install() {
 		        'no_fieldset' => 0,
 		        'repeat_collapsed' => 0,
 		        'text_parts' => array(),
-		        'year_range' => '-3:+3',
+		        'year_range' => '-90:0',
 		      ),
 		      'type' => 'date_select',
 		      'weight' => 43,
