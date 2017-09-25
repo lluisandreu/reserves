@@ -63,6 +63,10 @@ function reserves_bookings_permission() {
       'title' => t('Veure totes les reserves'),
       'description' => t('Es poden veure totes les reserves'),
     ),
+    'view own bookings' =>  array(
+      'title' => t('Veure totes les meves reserves'),
+      'description' => t('Es poden veure totes les meves reserves'),
+    ),
     'create bookings' =>  array(
       'title' => t('Crear una reserva'),
       'description' => t('Es poden crear reserves'),
@@ -132,7 +136,12 @@ function reserves_access($op, $account = NULL) {
   }
 
   if ($op == 'view') {
-    if (user_access('view bookings', $account)) {
+    if (user_access('view bookings', $account) || user_access('view own bookings', $account)) {
+      return TRUE;
+    }
+  }
+  if ($op == 'view_own') {
+    if (user_access('view own bookings', $account)) {
       return TRUE;
     }
   }
@@ -389,7 +398,7 @@ function reserves_bookings_form_submit(&$form, &$form_state) {
 
   entity_save(BOOKING, $entity);
 
-  //$form_state['redirect'] = 'admin/structure/reserves/manage';
+  $form_state['redirect'] = 'admin/structure/reserves/manage';
 
   drupal_set_message(t("La teva reserva #" . $entity->bid . " ha estat actualitzada"), 'status', TRUE);
 }
@@ -402,7 +411,7 @@ function reserves_bookings_delete_confirm($form, &$form_state, $entity) {
   );
   $question = t('Segur que vols eliminar aquesta reserva?');
   $path = 'admin/structure/reserves/' . $entity->bid;
-  return confirm_form($form, $question, $path, t('Aquesta acció no es pot refer'), t("D'acord"), t('Cancela'));
+  return confirm_form($form, $question, $path, t('Aquesta acció no es pot refer'), t("D'acord"), t('Cancela'), 'Confirma');
 
 }
 
@@ -603,7 +612,7 @@ function _get_bookings_all($status = 1) {
   $query = db_select('reserves_booking', 'rb');
   $query->join('field_data_reserves_booking_bookingtime', 'fb', 'fb.entity_id = rb.bid');
   $query->fields('rb', array('bid'));
-  $query->condition('rb.status', $status);
+  //$query->condition('rb.status', $status);
   $query->where("DATE_FORMAT(ADDTIME(fb.reserves_booking_bookingtime_value, SEC_TO_TIME(7200)), '%Y-%m-%d') >= :date", array(':date' => $now));
   $query->orderBy('fb.reserves_booking_bookingtime_value', 'ASC');
   $query->range(0, 60);
@@ -620,7 +629,7 @@ function _get_bookingsid_from_userid($user_uid, $status = 1) {
   $query->join('field_data_reserves_booking_bookingtime', 'fb', 'fb.entity_id = rb.bid');
   $query->fields('rb', array('bid'));
   $query->condition('rb.uid', $user_uid);
-  $query->condition('rb.status', $status);
+  //$query->condition('rb.status', $status);
   $query->where("DATE_FORMAT(ADDTIME(fb.reserves_booking_bookingtime_value, SEC_TO_TIME(7200)), '%Y-%m-%d') >= :date", array(':date' => $now));
   $query->orderBy('fb.reserves_booking_bookingtime_value', 'ASC');
   $query->range(0, 60);
