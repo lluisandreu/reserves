@@ -10,6 +10,7 @@ Permet crear espais reservables per ajuntaments o entitats
 	3. [Entity API](https://www.drupal.org/project/entity)
 	4. [Libraries](https://www.drupal.org/project/libraries)
 	5. [Fullcalendar](https://fullcalendar.io/download/) i copia'l dins /sites/all/libraries amb el nom de "fullcalendar"
+	6. [MomentJS](https://momentjs.com/downloads/moment.js). Crea una carpeta a /sites/all/libraries amb el nom de "moment" i copia l'arxiu moment.js.
 3. Instal·la el mòdul "Reserves". Els altres dos submòduls s'instal·laran automàticament. 
 
 ## 2. Creació d'espais
