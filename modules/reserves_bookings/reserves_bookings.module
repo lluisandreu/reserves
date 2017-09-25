@@ -613,7 +613,7 @@ function _get_bookings_all($status = 1) {
   $query->join('field_data_reserves_booking_bookingtime', 'fb', 'fb.entity_id = rb.bid');
   $query->fields('rb', array('bid'));
   //$query->condition('rb.status', $status);
-  $query->where("DATE_FORMAT(ADDTIME(fb.reserves_booking_bookingtime_value, SEC_TO_TIME(7200)), '%Y-%m-%d') >= :date", array(':date' => $now));
+  $query->where("DATE_FORMAT(fb.reserves_booking_bookingtime_value, '%Y-%m-%d') >= :date", array(':date' => $now));
   $query->orderBy('fb.reserves_booking_bookingtime_value', 'ASC');
   $query->range(0, 60);
   $results = $query->execute()->fetchAll();
@@ -630,7 +630,7 @@ function _get_bookingsid_from_userid($user_uid, $status = 1) {
   $query->fields('rb', array('bid'));
   $query->condition('rb.uid', $user_uid);
   //$query->condition('rb.status', $status);
-  $query->where("DATE_FORMAT(ADDTIME(fb.reserves_booking_bookingtime_value, SEC_TO_TIME(7200)), '%Y-%m-%d') >= :date", array(':date' => $now));
+  $query->where("DATE_FORMAT(fb.reserves_booking_bookingtime_value, '%Y-%m-%d') >= :date", array(':date' => $now));
   $query->orderBy('fb.reserves_booking_bookingtime_value', 'ASC');
   $query->range(0, 60);
   $results = $query->execute()->fetchAll();
