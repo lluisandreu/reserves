@@ -5,5 +5,3 @@ version = 7.x-1.0
 package = Reserves
 
 files[] = reserves_bookings.controller.inc
-
-dependencies[] = reserves

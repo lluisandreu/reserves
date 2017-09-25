@@ -12,5 +12,6 @@ dependencies[] = office_hours
 dependencies[] = reserves_bookings
 dependencies[] = reserves_users
 dependencies[] = libraries
+dependencies[] = jquery_update
 
 files[] = reserves.controller.inc

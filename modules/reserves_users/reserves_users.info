@@ -3,5 +3,3 @@ description = Habilita el formulari de registre i accés i crea  els rols dels u
 version = 7.x-1.0
 core = 7.x
 package = Reserves
-
-dependencies[] = reserves
