@@ -1,5 +1,12 @@
 <?php
 
+/**
+* @file
+* Módul per a la reserva de recursos d'un Ajuntament o Institució. 
+* Desenvolupat per Lluis A. Oliver. 
+* www.lluisandreu.com
+*/
+
 
 /**
  * Implements hook_menu().

@@ -1,6 +1,13 @@
 <?php
 
 /**
+* @file
+* Módul per a la reserva de recursos d'un Ajuntament o Institució. 
+* Desenvolupat per Lluis A. Oliver. 
+* www.lluisandreu.com
+*/
+
+/**
  * Implements hook_install().
  */
 function reserves_users_install() {
@@ -14,7 +21,7 @@ function reserves_users_install() {
 		variable_set('user_email_verification', 0);
 	}
 
-	if (!field_info_field('field_reserves_birthdate')) {
+	if (!field_info_field('field_reserves_birthdate') && module_exists('date') && module_exists('date_popup')) {
 		$field = array(
 			'active' => 1,
 		    'cardinality' => 1,

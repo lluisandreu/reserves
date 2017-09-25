@@ -1,14 +1,16 @@
-name = Espais
-description = Mòdul per a la reserva de diferents recursos de què disposa un Ajundament o institució.
+name = Reserves
+description = Mòdul principal per crear els espais reservables que pot tenir un ajuntament.
 package = Reserves
-version = 1.0
+version = 7.x-1.0
 core = 7.x
 
 dependencies[] = entity
 dependencies[] = date
+dependencies[] = date_popup
+dependencies[] = date_repeat_field
 dependencies[] = office_hours
-dependencies[] = reserves_bookings
-dependencies[] = reserves_users
+;dependencies[] = reserves_bookings
+;dependencies[] = reserves_users
 dependencies[] = libraries
 
 files[] = reserves.controller.inc

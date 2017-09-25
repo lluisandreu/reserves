@@ -1,3 +1,11 @@
+<?php 
+/*
+* Plantilla per a la pàgina d'una reserva. Si es vol personalitzar és millor 
+* que creeu el mateix fitxer reserves-booking.tpl.php a la carpeta de plantilles del vostre tema i el carregueu 
+* amb un hook_theme_alter().
+*/
+?>
+
 <?php $theuser = user_load($element->uid); ?>
 <?php $espai_title = get_espai_name_by_id($element->sid); ?>
 <?php $content = $element->content; ?>

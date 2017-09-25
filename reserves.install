@@ -14,6 +14,8 @@ define("ESPAI", 'reserves_espai');
  */
 function reserves_install() {
 
+	drupal_load('module', 'reserves');
+
 	// Create Body field
 	if (!field_info_field(ESPAI.'_body')) {
 		$field = array(
@@ -110,6 +112,7 @@ function reserves_install() {
 			'field_name' => ESPAI.'_slots',
 			'type' => 'number_integer',
 			'entity_types' => array(ESPAI),
+			'locked' => 1,
 			'settings' => array(
 				'min' => 0,
 			),
@@ -121,6 +124,7 @@ function reserves_install() {
 			'field_name' => ESPAI.'_slots',
 			'entity_type' => ESPAI,
 			'bundle' => ESPAI,
+			'locked' => 1,
 			'label' => 'Places disponibles',
 			'required' => TRUE,
 		);
@@ -128,7 +132,7 @@ function reserves_install() {
 	}
 
 	/// Timetable
-	if (!field_info_field(ESPAI.'_times')) {
+	if (!field_info_field(ESPAI.'_times') && module_exists('office_hours')) {
 		$field = array(
 		    'entity_types' => array(ESPAI),
 		    'field_name' => ESPAI.'_times',
@@ -149,12 +153,11 @@ function reserves_install() {
 		);
 		field_create_field($field);
 	}
-	if (!field_info_instance(ESPAI, ESPAI.'_times', ESPAI)) {
+	if (!field_info_instance(ESPAI, ESPAI.'_times', ESPAI) && module_exists('office_hours')) {
 		$instance = array(
 			'bundle' => ESPAI,
 		    'default_value' => NULL,
-		    'deleted' => 0,
-		    'description' => '',
+		    'locked' => 1,
 		    'display' => array(
 		      'default' => array(
 		        'label' => 'above',
@@ -206,7 +209,7 @@ function reserves_install() {
 		);
 		field_create_instance($instance);
 	}
-	if (!field_info_field(ESPAI.'_festivities')) {
+	if (!field_info_field(ESPAI.'_festivities') && module_exists('date') && module_exists('date_popup')) {
 		$field = array(
 		    'entity_types' => array(ESPAI),
 		    'field_name' => ESPAI.'_festivities',
@@ -233,7 +236,7 @@ function reserves_install() {
 		);
 		field_create_field($field);
 	}
-	if (!field_info_instance(ESPAI, ESPAI.'_festivities', ESPAI)) { 
+	if (!field_info_instance(ESPAI, ESPAI.'_festivities', ESPAI) && module_exists('date') && module_exists('date_popup')) { 
 		$instance = array(
 			'bundle' => ESPAI,
 		    'display' => array(
@@ -262,6 +265,7 @@ function reserves_install() {
 		    'entity_type' => ESPAI,
 		    'field_name' => ESPAI.'_festivities',
 		    'label' => 'Festius',
+		    'locked' => 1,
 		    'required' => 0,
 		    'settings' => array(
 		      'default_value' => 'now',
@@ -289,56 +293,12 @@ function reserves_install() {
 		);
 		field_create_instance($instance);
 	}
-	/// Disable bookings temporary
-	if (!field_info_field(ESPAI.'_disabled')) {
-		$field = array(
-			'field_name' => ESPAI.'_disabled',
-			'type' => 'list_boolean',
-			'entity_types' => array(ESPAI),
-			'settings' => array(
-				'allowed_values' => array(
-			        0 => '',
-			        1 => '',
-			    ),
-			),
-			'locked' => 1,
-		);
-		field_create_field($field);
-	}
-	if (!field_info_instance(ESPAI, ESPAI.'_disabled', ESPAI)) {
-		$instance = array(
-			'field_name' => ESPAI.'_disabled',
-			'entity_type' => ESPAI,
-			'bundle' => ESPAI,
-			'label' => 'Desabilita les reserves temporalment',
-			'description' => "Si activeu aquesta opció l'espai no podrà ser reservat",
-			'default_value' => 60,
-			'display' => array(
-		      'default' => array(
-		        'label' => 'above',
-		        'module' => 'list',
-		        'settings' => array(),
-		        'type' => 'list_default',
-		      ),
-		    ),
-		    'widget' => array(
-		      'active' => 1,
-		      'module' => 'options',
-		      'settings' => array(
-		        'display_label' => 1,
-		      ),
-		      'type' => 'options_onoff',
-		      'weight' => 44,
-		    ),
-		);
-		field_create_instance($instance);
-	}
-
 	/// Min booking time
 	if (!field_info_field(ESPAI.'_min_booking_time')) {
 		$field = array(
 			'field_name' => ESPAI.'_min_booking_time',
 			'type' => 'number_integer',
+			'locked' => 1,
 			'entity_types' => array(ESPAI),
 			'settings' => array(
 				'min' => 30,
@@ -351,6 +311,7 @@ function reserves_install() {
 		$instance = array(
 			'field_name' => ESPAI.'_min_booking_time',
 			'entity_type' => ESPAI,
+			'locked' => 1,
 			'bundle' => ESPAI,
 			'label' => 'Quin és el mínim de temps que es pot reservar?',
 			'description' => 'En minuts',
@@ -365,6 +326,7 @@ function reserves_install() {
 		$field = array(
 			'field_name' => ESPAI.'_max_booking_time',
 			'type' => 'number_integer',
+			'locked' => 1,
 			'entity_types' => array(ESPAI),
 			'locked' => TRUE,
 			'settings' => array(
@@ -378,6 +340,7 @@ function reserves_install() {
 			'field_name' => ESPAI.'_max_booking_time',
 			'entity_type' => ESPAI,
 			'bundle' => ESPAI,
+			'locked' => 1,
 			'label' => 'Quin és el màxim de temps que es pot reservar?',
 			'description' => 'En minuts',
 			'required' => TRUE,
@@ -393,13 +356,11 @@ function reserves_install() {
 			'type' => 'list_integer',
 			'entity_types' => array(ESPAI),
 			'cardinality' => 1,
-			'locked' => TRUE,
+			'locked' => 1,
 			'settings' => array(
 			    'allowed_values' => array(
 					30 => '30',
-					60 => '60',
-					90 => '90',
-					120 => '120',
+					60 => '60'
 				),
 			),
 		);
@@ -410,6 +371,7 @@ function reserves_install() {
 			'field_name' => ESPAI.'_granularity',
 			'entity_type' => ESPAI,
 			'bundle' => ESPAI,
+			'locked' => 1,
 			'label' => 'Amb quina granularitat es pot reservar?',
 			'description' => 'En minuts',
 			'required' => TRUE,
@@ -424,9 +386,7 @@ function reserves_install() {
 function _time_granularity_list() {
 	return array(
 		30 => '30',
-		60 => '60',
-		90 => '90',
-		120 => '120',
+		60 => '60'
 	);
 }
 
@@ -499,7 +459,7 @@ function reserves_schema() {
  */
 function reserves_uninstall() {
 
-	$fields_toremove = array('_body', '_images', '_slots', '_times', '_min_booking_time', '_max_booking_time', '_granularity', '_festivities', '_disabled');
+	$fields_toremove = array('_body', '_images', '_slots', '_times', '_min_booking_time', '_max_booking_time', '_granularity', '_festivities');
 	foreach ($fields_toremove as $key => $field) {
 		$instance = field_info_instance(ESPAI, ESPAI.$field, ESPAI);
 		if ($instance) {
@@ -508,7 +468,7 @@ function reserves_uninstall() {
 	}
 
 	if (module_exists('reserves_bookings')) {
-		$modules = array('reserves_bookings');
+		$modules = array('reserves_bookings', 'reserves_users');
 		module_disable($modules);
 		drupal_uninstall_modules($modules);
 		drush_print($modules . ' Has been uninstalled');

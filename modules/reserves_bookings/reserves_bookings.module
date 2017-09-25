@@ -1,6 +1,14 @@
 <?php
 
+/**
+* @file
+* Módul per a la reserva de recursos d'un Ajuntament o Institució. 
+* Desenvolupat per Lluis A. Oliver. 
+* www.lluisandreu.com
+*/
+
 define("BOOKING", 'reserves_booking');
+
 
 /**
  * Implements hook_entity_info().

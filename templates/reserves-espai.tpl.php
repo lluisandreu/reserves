@@ -1,5 +1,13 @@
-<p><a href="<?php print url('espais'); ?>">Veure tots els espais</a></p>
+<?php 
+/*
+* Plantilla per a la pàgina de l'espai. Si es vol personalitzar és millor 
+* que creeu el mateix fitxer reserves-espai.tpl.php a la carpeta de plantilles del vostre tema i el carregueu 
+* amb un hook_theme_alter().
+*/
+?>
+
 <?php global $user; ?>
+<p><a href="<?php print url('espais'); ?>">Veure tots els espais</a></p>
 <?php $content = $element->content; ?>
 
 <?php print render($content['reserves_espai_images']); ?>

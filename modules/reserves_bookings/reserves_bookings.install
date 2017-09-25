@@ -1,14 +1,23 @@
 <?php
 
 /**
+* @file
+* Módul per a la reserva de recursos d'un Ajuntament o Institució. 
+* Desenvolupat per Lluis A. Oliver. 
+* www.lluisandreu.com
+*/
+
+/**
  * Implements hook_install().
  */
 function reserves_bookings_install() {
 
+	drupal_load('module', 'reserves_bookings');
+
 	if (!field_info_field(BOOKING.'_bookingtime')) {
 		$field = array(
 		    'cardinality' => 1,
-		    'entity_types' => BOOKING,
+		    'entity_types' => array(BOOKING),
 		    'field_name' => BOOKING.'_bookingtime',
 		    'locked' => 1,
 		    'module' => 'date',
@@ -76,7 +85,7 @@ function reserves_bookings_install() {
 		        'text_parts' => array(),
 		        'year_range' => '0:+1',
 		      ),
-		      'type' => 'date_popup',
+		      'type' => 'datetime',
 		      'weight' => 45,
 		    ),
 		);
