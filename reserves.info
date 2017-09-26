@@ -6,6 +6,7 @@ core = 7.x
 
 dependencies[] = entity
 dependencies[] = date
+dependencies[] = views
 dependencies[] = date_popup
 dependencies[] = date_repeat_field
 dependencies[] = office_hours
