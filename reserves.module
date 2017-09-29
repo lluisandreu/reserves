@@ -265,6 +265,7 @@ function reserves_preprocess_reserves_espai(&$variables) {
   $min_booking_time = $variables['element']->reserves_espai_min_booking_time['und'][0]['value'];
   $max_booking_time = $variables['element']->reserves_espai_max_booking_time['und'][0]['value'];
   $granularity = $variables['element']->reserves_espai_granularity['und'][0]['value'];
+  $slots = $variables['element']->reserves_espai_slots['und'][0]['value'];
 
   drupal_add_css(drupal_get_path('module', 'reserves') . '/reserves.css');
 
@@ -273,6 +274,7 @@ function reserves_preprocess_reserves_espai(&$variables) {
   drupal_add_js(array('reserves' => array('max_booking_time' => $max_booking_time)), 'setting');
   drupal_add_js(array('reserves' => array('granularity' => $granularity)), 'setting');
   drupal_add_js(array('reserves' => array('sid' => $variables['element']->sid)), 'setting');
+  drupal_add_js(array('reserves' => array('maxSlots' => $slots)), 'setting');
   drupal_add_js(drupal_get_path('module', 'reserves') . '/reserves.scripts.js', $options);
 }
 

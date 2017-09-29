@@ -607,13 +607,17 @@ function _get_bookings_by_space($space_id, $status = 1) {
 
 function _get_bookings_all($status = 1) {
 
-  $now = format_date(time(), 'custom', 'Y-m-d');
+  global $databases;
+  $now = time();
 
   $query = db_select('reserves_booking', 'rb');
   $query->join('field_data_reserves_booking_bookingtime', 'fb', 'fb.entity_id = rb.bid');
   $query->fields('rb', array('bid'));
-  //$query->condition('rb.status', $status);
-  $query->where("DATE_FORMAT(fb.reserves_booking_bookingtime_value, '%Y-%m-%d') >= :date", array(':date' => $now));
+  if ($databases['default']['default']['driver'] == 'mysql') {
+    $query->where("UNIX_TIMESTAMP(fb.reserves_booking_bookingtime_value) >= :now", array(':now' => $now));
+  } else {
+    $query->where("to_timestamp(fb.reserves_booking_bookingtime_value, 'YYYY-Mon-dd HH24:MI:SS') >= :date", array(':date' => $now));
+  }
   $query->orderBy('fb.reserves_booking_bookingtime_value', 'ASC');
   $query->range(0, 60);
   $results = $query->execute()->fetchAll();
@@ -623,14 +627,18 @@ function _get_bookings_all($status = 1) {
 
 function _get_bookingsid_from_userid($user_uid, $status = 1) {
 
-  $now = format_date(time(), 'custom', 'Y-m-d H:i:s');
+  global $databases;
+  $now = time();
 
   $query = db_select('reserves_booking', 'rb');
   $query->join('field_data_reserves_booking_bookingtime', 'fb', 'fb.entity_id = rb.bid');
   $query->fields('rb', array('bid'));
   $query->condition('rb.uid', $user_uid);
-  //$query->condition('rb.status', $status);
-  $query->where("DATE_FORMAT(fb.reserves_booking_bookingtime_value, '%Y-%m-%d') >= :date", array(':date' => $now));
+  if ($databases['default']['default']['driver'] == 'mysql') {
+    $query->where("UNIX_TIMESTAMP(fb.reserves_booking_bookingtime_value) >= :now", array(':now' => $now));
+  } else {
+    $query->where("to_timestamp(fb.reserves_booking_bookingtime_value, 'YYYY-Mon-dd HH24:MI:SS') >= :date", array(':date' => $now));
+  }
   $query->orderBy('fb.reserves_booking_bookingtime_value', 'ASC');
   $query->range(0, 60);
   $results = $query->execute()->fetchAll();

@@ -10,6 +10,7 @@
         var minDuration = Number(Drupal.settings.reserves.min_booking_time);
         var maxDuration = Number(Drupal.settings.reserves.max_booking_time);
         var granularity = Number(Drupal.settings.reserves.granularity);
+        var maxSlots = Number(Drupal.settings.reserves.maxSlots);
 
         calendar.fullCalendar({
             defaultView: 'agendaWeek',
@@ -47,6 +48,27 @@
                 url: '/espais/' + sid + '/json',
                 type: 'POST',
             }],
+            dayClick: function (date, jsEvent, view) {
+                alert('Per seleccionar un interval de temps has de mantenir el botó esquerre del ratolí clicat i fer un moviment vertical');
+            },
+            eventResize: function (event, delta, revertFunc) {
+                var duration = event.end.diff(event.start, 'minutes');
+                console.log(duration);
+                if (duration >= minDuration) {
+                    if (duration <= maxDuration && duration % granularity == 0) {
+                        popup.show();
+                        scrollToForm();
+                        addEventForm.find('#edit-date-start').val(event.start.format('H:mm'));
+                        addEventForm.find('#edit-date-end').val(event.end.format('H:mm'));
+                        addEventForm.find('#edit-booking-day').val(event.start.format('D/M/YYYY'));
+                    } else {
+                        revertFunc();
+                    }
+
+                } else {
+                    revertFunc();
+                }
+            },
             select: function (start, final, jsEvent, view) {
 
                 calendar.fullCalendar('removeEvents', 0);
@@ -62,6 +84,7 @@
                 event.constraint = "businessHours";
                 event.editable = true;
                 event.startEditable = true;
+                event.durationEditable = true;
                 event.allDay = false;
 
                 if (start >= now && !allDay) {
@@ -87,9 +110,11 @@
 
                     } else {
                         calendar.fullCalendar('unselect');
+                        alert("La durada mínima de la reserva ha de ser de " + minDuration + " minuts.");
                     }
                 } else {
                     calendar.fullCalendar('unselect');
+                    alert('Les dates que has seleccionat ja han passat.');
                 }
 
             },
@@ -110,9 +135,16 @@
                     addEventForm.find('#edit-booking-day').val(event.start.format('D/M/YYYY'));
                     addEventForm.find('#edit-pax').html('');
 
-                    for (var i = 1; i < event.pax + 1; i++) {
-                        addEventForm.find('#edit-pax').append('<option value=' + i + '>' + i + '</option>');
-                    };
+                    if (event.pax) {
+                        for (var i = 1; i < event.pax + 1; i++) {
+                            addEventForm.find('#edit-pax').append('<option value=' + i + '>' + i + '</option>');
+                        };
+                    } else {
+                        for (var i = 1; i < maxSlots + 1; i++) {
+                            addEventForm.find('#edit-pax').append('<option value=' + i + '>' + i + '</option>');
+                        };
+                    }
+
                     scrollToForm();
                 }
 
