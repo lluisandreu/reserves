@@ -616,7 +616,7 @@ function _get_bookings_all($status = 1) {
   if ($databases['default']['default']['driver'] == 'mysql') {
     $query->where("UNIX_TIMESTAMP(fb.reserves_booking_bookingtime_value) >= :now", array(':now' => $now));
   } else {
-    $query->where("to_timestamp(fb.reserves_booking_bookingtime_value, 'YYYY-Mon-dd HH24:MI:SS') >= :date", array(':date' => $now));
+    $query->where("to_timestamp(fb.reserves_booking_bookingtime_value, 'YYYY-Mon-dd HH24:MI:SS') >= :now", array(':now' => $now));
   }
   $query->orderBy('fb.reserves_booking_bookingtime_value', 'ASC');
   $query->range(0, 60);
@@ -637,7 +637,7 @@ function _get_bookingsid_from_userid($user_uid, $status = 1) {
   if ($databases['default']['default']['driver'] == 'mysql') {
     $query->where("UNIX_TIMESTAMP(fb.reserves_booking_bookingtime_value) >= :now", array(':now' => $now));
   } else {
-    $query->where("to_timestamp(fb.reserves_booking_bookingtime_value, 'YYYY-Mon-dd HH24:MI:SS') >= :date", array(':date' => $now));
+    $query->where("to_timestamp(fb.reserves_booking_bookingtime_value, 'YYYY-Mon-dd HH24:MI:SS') >= :now", array(':now' => $now));
   }
   $query->orderBy('fb.reserves_booking_bookingtime_value', 'ASC');
   $query->range(0, 60);
