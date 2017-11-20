@@ -592,14 +592,22 @@ function _get_bookings_pax_by_space($space_id, $status = 1) {
 
 function _get_bookings_by_space($space_id, $status = 1) {
 
+  global $databases;
+
   $query = db_select('field_data_reserves_booking_bookingtime', 'fb');
   $query->join('reserves_booking', 'rb', 'fb.entity_id = rb.bid');
   $query->fields('fb', array('reserves_booking_bookingtime_value', 'reserves_booking_bookingtime_value2'));
-  $query->fields('rb', array('bid', 'pax'));
+  $query->addExpression('SUM(rb.pax)', 'pax');
   $query->condition('rb.sid', $space_id);
   $query->condition('rb.status', $status);
-  $query->groupBy("fb.reserves_booking_bookingtime_value");
-  $query->addExpression('SUM(pax)', 'pax');
+   if ($databases['default']['default']['driver'] == 'mysql') {
+    $query->fields('rb', array('bid', 'pax'));
+    $query->groupBy("fb.reserves_booking_bookingtime_value");
+  } else {
+    $query->addExpression('MAX(rb.bid)', 'bid');
+    $query->groupBy("fb.reserves_booking_bookingtime_value, fb.reserves_booking_bookingtime_value2");
+  }
+  
   $results = $query->execute()->fetchAll();
 
   return $results;
@@ -616,7 +624,7 @@ function _get_bookings_all($status = 1) {
   if ($databases['default']['default']['driver'] == 'mysql') {
     $query->where("UNIX_TIMESTAMP(fb.reserves_booking_bookingtime_value) >= :now", array(':now' => $now));
   } else {
-    $query->where("to_timestamp(fb.reserves_booking_bookingtime_value, 'YYYY-Mon-dd HH24:MI:SS') >= :now", array(':now' => $now));
+    $query->where("TO_CHAR(fb.reserves_booking_bookingtime_value::timestamp with time zone AT TIME ZONE 'Europe/Madrid', 'YYYY-MM-DD') >= :now", array(':now' => date('Y-m-d', time())));
   }
   $query->orderBy('fb.reserves_booking_bookingtime_value', 'ASC');
   $query->range(0, 60);
@@ -637,7 +645,7 @@ function _get_bookingsid_from_userid($user_uid, $status = 1) {
   if ($databases['default']['default']['driver'] == 'mysql') {
     $query->where("UNIX_TIMESTAMP(fb.reserves_booking_bookingtime_value) >= :now", array(':now' => $now));
   } else {
-    $query->where("to_timestamp(fb.reserves_booking_bookingtime_value, 'YYYY-Mon-dd HH24:MI:SS') >= :now", array(':now' => $now));
+    $query->where("TO_CHAR(fb.reserves_booking_bookingtime_value::timestamp with time zone AT TIME ZONE 'Europe/Madrid', 'YYYY-MM-DD') >= :now", array(':now' => date('Y-m-d', time())));
   }
   $query->orderBy('fb.reserves_booking_bookingtime_value', 'ASC');
   $query->range(0, 60);
